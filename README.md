@@ -8,6 +8,8 @@
 
 **온라인 접속:** https://kzy0023.github.io/DSMC-SLEEP-SCALE/sleep_scale_release.html
 
+![QR Code](qr_release.png)
+
 ## 포함된 검사 도구
 
 ### Scale I

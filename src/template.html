@@ -1,0 +1,1984 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSMC Sleep Scale - 동산의료원 수면리듬양상검사</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            background: #f0f4f8;
+            color: #1a202c;
+            line-height: 1.6;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header h1 { font-size: 1.8em; margin-bottom: 5px; }
+        .header p { opacity: 0.85; font-size: 0.95em; }
+        .tab-container {
+            display: flex;
+            justify-content: center;
+            background: #fff;
+            border-bottom: 2px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .tab-btn {
+            padding: 15px 40px;
+            border: none;
+            background: none;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            color: #64748b;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .tab-btn:hover { color: #1e3a5f; background: #f8fafc; }
+        .tab-btn.active { color: #1e3a5f; border-bottom-color: #1e3a5f; }
+        .tab-content { display: none; max-width: 900px; margin: 0 auto; padding: 30px 20px; }
+        .tab-content.active { display: block; }
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #e2e8f0;
+        }
+        .section-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 8px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .section-desc {
+            font-size: 0.9em;
+            color: #64748b;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 3px solid #3b82f6;
+        }
+        .question {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #fafbfc;
+            border: 1px solid #f0f0f0;
+        }
+        .question:hover { border-color: #cbd5e1; }
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #334155;
+        }
+        .options { display: flex; flex-wrap: wrap; gap: 8px; }
+        .options label {
+            display: flex;
+            align-items: center;
+            padding: 8px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9em;
+            background: white;
+        }
+        .options label:hover { border-color: #3b82f6; background: #eff6ff; }
+        .options input[type="radio"] { margin-right: 6px; accent-color: #1e3a5f; }
+        .options input[type="radio"]:checked + span { font-weight: 600; }
+        .options label:has(input:checked) {
+            border-color: #1e3a5f;
+            background: #eff6ff;
+        }
+        .scale-options {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .scale-options label {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            background: white;
+        }
+        .scale-options label:hover { border-color: #3b82f6; background: #eff6ff; }
+        .scale-options label:has(input:checked) {
+            border-color: #1e3a5f;
+            background: #1e3a5f;
+            color: white;
+        }
+        .scale-options input[type="radio"] { display: none; }
+        .scale-labels { display: flex; justify-content: space-between; font-size: 0.8em; color: #94a3b8; margin-top: 5px; }
+        .time-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .time-input input, .time-input select {
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            width: 80px;
+            text-align: center;
+        }
+        .time-input input:focus, .time-input select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .yesno-options { display: flex; gap: 15px; }
+        .yesno-options label {
+            padding: 8px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+        .yesno-options label:hover { border-color: #3b82f6; }
+        .yesno-options label:has(input:checked) {
+            border-color: #1e3a5f;
+            background: #eff6ff;
+        }
+        .yesno-options input[type="radio"] { margin-right: 5px; accent-color: #1e3a5f; }
+        .submit-btn {
+            display: block;
+            width: 100%;
+            max-width: 400px;
+            margin: 30px auto;
+            padding: 16px;
+            background: linear-gradient(135deg, #1e3a5f, #2d5a87);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(30,58,95,0.3);
+        }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(30,58,95,0.4); }
+        .result-box {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #e2e8f0;
+        }
+        .result-title { font-size: 1.1em; font-weight: 700; color: #1e3a5f; margin-bottom: 10px; }
+        .result-score {
+            font-size: 2em;
+            font-weight: 800;
+            color: #1e3a5f;
+            margin: 10px 0;
+        }
+        .result-interp {
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 8px;
+            display: inline-block;
+        }
+        .result-normal { background: #dcfce7; color: #166534; }
+        .result-mild { background: #fef9c3; color: #854d0e; }
+        .result-moderate { background: #fed7aa; color: #9a3412; }
+        .result-severe { background: #fecaca; color: #991b1b; }
+        .sub-question { margin: 10px 0 10px 15px; padding: 10px; background: white; border-radius: 6px; border: 1px solid #f0f0f0; }
+        .sub-question-text { font-size: 0.9em; color: #475569; margin-bottom: 8px; }
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .info-box h4 { color: #1e40af; margin-bottom: 5px; }
+        .info-box p { font-size: 0.9em; color: #1e40af; }
+        .patient-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .patient-info label { font-weight: 600; font-size: 0.9em; color: #475569; }
+        .patient-info input, .patient-info select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            margin-top: 4px;
+        }
+        .patient-info input:focus, .patient-info select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        @media (max-width: 768px) {
+            .options { flex-direction: column; }
+            .tab-btn { padding: 12px 15px; font-size: 0.85em; }
+            .section { padding: 15px 12px; overflow: hidden; }
+            .patient-info { grid-template-columns: 1fr; }
+            .patient-info div { overflow: hidden; }
+            .patient-info input, .patient-info select {
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+                font-size: 16px;
+                box-sizing: border-box;
+            }
+            .patient-info input[type="date"] {
+                -webkit-appearance: none;
+                appearance: none;
+            }
+            .time-input { flex-wrap: wrap; }
+            .time-input input { width: 70px; font-size: 16px; }
+            .scale-options label { width: 36px; height: 36px; font-size: 0.85em; }
+            .header { padding: 15px 10px !important; }
+            .header h1 { font-size: 1.1em !important; }
+            .header p { font-size: 0.7em !important; }
+            .header img { height: 35px !important; }
+        }
+        .print-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #475569;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 15px;
+        }
+        @media print {
+            .tab-container, .submit-btn, .print-btn, .header { display: none; }
+            .tab-content { display: block !important; }
+            .section { break-inside: avoid; }
+        }
+        input:disabled, select:disabled {
+            background: #e2e8f0 !important;
+            color: #94a3b8 !important;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .warning-banner {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .warning-banner span { color: #92400e; font-size: 0.9em; font-weight: 600; }
+        .warning-banner button {
+            padding: 6px 14px;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .warning-banner button:hover { background: #d97706; }
+    </style>
+</head>
+<body>
+
+<div class="header" style="display:flex;align-items:center;justify-content:space-between;padding:20px 30px">
+    <img src="{{LOGO_DATA_URI}}" alt="동산의료원 로고" style="height:50px;border-radius:4px">
+    <div style="text-align:center">
+        <h1 style="font-size:1.5em;margin:0">DSMC SLEEP SCALE</h1>
+        <p style="margin:0;opacity:0.85;font-size:0.85em">계명대학교 동산병원 신경과 수면센터 | 수면리듬양상검사</p>
+    </div>
+    <div style="text-align:right;font-size:0.8em;opacity:0.7">ver. 2026. JUN</div>
+</div>
+
+<div class="tab-container">
+    <button class="tab-btn active" onclick="switchTab('info')">기본정보</button>
+    <button class="tab-btn" onclick="switchTab('scale1')">Sleep Scale I</button>
+    <button class="tab-btn" onclick="switchTab('scale2')">Sleep Scale II</button>
+    <button class="tab-btn" onclick="switchTab('results')">결과 보기</button>
+</div>
+
+<!-- ==================== 기본정보 ==================== -->
+<div id="info" class="tab-content active">
+
+    <!-- 인적사항 -->
+    <div class="section">
+        <div class="section-title">[인적사항]</div>
+        <div class="patient-info">
+            <div><label>등록번호<input type="text" id="patient_id"></label></div>
+            <div><label>성 명<input type="text" id="patient_name"></label></div>
+            <div><label>평가일<input type="date" id="eval_date"></label></div>
+            <div><label>생년월일<input type="date" id="patient_birth"></label></div>
+            <div><label>나이<input type="number" id="patient_age" min="0" max="150" readonly style="background:#f1f5f9"></label></div>
+            <div><label>성별
+                <select id="patient_gender"><option value="">선택</option><option value="남">남</option><option value="여">여</option></select>
+            </label></div>
+            <div><label>의심진단<input type="text" id="patient_diagnosis"></label></div>
+        </div>
+    </div>
+
+    <!-- 기본정보 -->
+    <div class="section">
+        <div class="section-title">[인적사항 및 기본정보]</div>
+        <div class="patient-info">
+            <div><label>직업
+                <select id="patient_job"><option value="">선택</option><option value="유">유 (직업명 기입)</option><option value="무">무</option><option value="생산직">생산직</option><option value="사무직">사무직</option></select>
+            </label></div>
+            <div><label>직업명 (유인 경우)<input type="text" id="patient_job_name"></label></div>
+            <div><label>교대근무
+                <select id="patient_shift"><option value="">선택</option><option value="유">유</option><option value="무">무</option></select>
+            </label></div>
+        </div>
+
+        <div style="margin-top:15px;padding-top:15px;border-top:1px solid #e2e8f0">
+            <div class="patient-info">
+                <div><label>학력
+                    <select id="patient_edu"><option value="">선택</option><option value="초졸미만">초졸미만</option><option value="초졸">초졸</option><option value="중졸">중졸</option><option value="고졸">고졸</option><option value="대졸">대졸</option><option value="대학원이상">대학원 이상</option><option value="기타">기타</option></select>
+                </label></div>
+                <div><label>결혼상태
+                    <select id="patient_marriage"><option value="">선택</option><option value="미혼">미혼</option><option value="기혼">기혼</option><option value="이혼">이혼</option><option value="사별">사별</option><option value="기타">기타</option></select>
+                </label></div>
+                <div><label>세전 연간 가계 수입
+                    <select id="patient_income"><option value="">선택</option><option value="2천만원 미만">2천만원 미만</option><option value="2천-3천만원">2천-3천만원</option><option value="3천-5천만원">3천-5천만원</option><option value="5천-7천만원">5천-7천만원</option><option value="7천만원이상">7천만원이상</option></select>
+                </label></div>
+            </div>
+        </div>
+
+        <div style="margin-top:15px;padding-top:15px;border-top:1px solid #e2e8f0">
+            <div style="font-weight:600;margin-bottom:10px;color:#475569">신체계측</div>
+            <div class="patient-info">
+                <div><label>신장 (cm)<input type="number" id="patient_height" step="0.1"></label></div>
+                <div><label>몸무게 (kg)<input type="number" id="patient_weight" step="0.1"></label></div>
+                <div><label>BMI<input type="text" id="patient_bmi" readonly style="background:#f1f5f9"></label></div>
+                <div><label>목둘레 (cm)<input type="number" id="patient_neck" step="0.1"></label></div>
+                <div><label>허리둘레 (cm)<input type="number" id="patient_waist" step="0.1"></label></div>
+            </div>
+        </div>
+
+        <div style="margin-top:15px;padding-top:15px;border-top:1px solid #e2e8f0">
+            <div style="font-weight:600;margin-bottom:10px;color:#475569">생활습관</div>
+            <div class="patient-info">
+                <div style="grid-column:1/-1"><label>카페인
+                    <div style="display:flex;gap:10px;align-items:center;margin-top:5px;flex-wrap:wrap">
+                        <select id="patient_caffeine"><option value="">선택</option><option value="예">예</option><option value="아니오">아니오</option></select>
+                        <span style="font-size:0.85em">커피: 하루 <input type="number" id="caffeine_coffee" style="width:50px;padding:4px" min="0"> 잔</span>
+                        <span style="font-size:0.85em">차: 하루 <input type="number" id="caffeine_tea" style="width:50px;padding:4px" min="0"> 잔</span>
+                        <span style="font-size:0.85em">음료: 하루 <input type="number" id="caffeine_drink" style="width:50px;padding:4px" min="0"> 잔</span>
+                    </div>
+                </label></div>
+                <div><label>음주
+                    <select id="patient_alcohol"><option value="">선택</option><option value="예">예</option><option value="아니오">아니오</option></select>
+                </label></div>
+                <div style="grid-column:1/-1"><label>흡연
+                    <div style="display:flex;gap:10px;align-items:center;margin-top:5px;flex-wrap:wrap">
+                        <select id="patient_smoke"><option value="">선택</option><option value="예">예</option><option value="아니오">아니오</option><option value="금연">금연</option></select>
+                        <span style="font-size:0.85em">시작나이 <input type="number" id="smoke_start_age" style="width:50px;padding:4px" min="0"> 세</span>
+                        <span style="font-size:0.85em">흡연기간 <input type="number" id="smoke_years" style="width:50px;padding:4px" min="0"> 년</span>
+                        <span style="font-size:0.85em">금연연도 <input type="number" id="smoke_quit_year" style="width:60px;padding:4px" min="1900" max="2030"> 년</span>
+                    </div>
+                </label></div>
+                <div style="grid-column:1/-1"><label>운동
+                    <div style="display:flex;gap:10px;align-items:center;margin-top:5px;flex-wrap:wrap">
+                        <select id="patient_exercise"><option value="">선택</option><option value="예">예</option><option value="아니오">아니오</option></select>
+                        <span style="font-size:0.85em">운동종류 <input type="text" id="exercise_type" style="width:100px;padding:4px"></span>
+                        <span style="font-size:0.85em">→주 <input type="number" id="exercise_freq" style="width:40px;padding:4px" min="0"> 회</span>
+                        <span style="font-size:0.85em">1회당 <input type="number" id="exercise_duration" style="width:50px;padding:4px" min="0"> 분</span>
+                    </div>
+                </label></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 병력 및 약물 -->
+    <div class="section">
+        <div class="section-title">[병력 및 약물]</div>
+        <div class="patient-info">
+            <div style="grid-column:1/-1"><label>현재 앓고 있는 질환
+                <div style="display:flex;gap:10px;align-items:center;margin-top:5px;flex-wrap:wrap">
+                    <select id="patient_disease"><option value="">선택</option><option value="예">예</option><option value="아니오">아니오</option></select>
+                    <span style="font-size:0.85em">질환명: <input type="text" id="disease_name" style="width:200px;padding:4px" placeholder="질환명 기입"></span>
+                </div>
+            </label></div>
+            <div style="grid-column:1/-1"><label>현재 복용 중인 약물
+                <div style="display:flex;gap:10px;align-items:center;margin-top:5px;flex-wrap:wrap">
+                    <select id="patient_medicine"><option value="">선택</option><option value="예">예</option><option value="아니오">아니오</option></select>
+                    <span style="font-size:0.85em">약물명: <input type="text" id="medicine_name" style="width:200px;padding:4px" placeholder="약물명 기입"></span>
+                </div>
+            </label></div>
+            <div><label>수면문제로 방문했던 병원의 수<input type="number" id="patient_hospital_count" min="0"></label></div>
+        </div>
+    </div>
+
+    <button class="submit-btn" onclick="switchTab('scale1')">검사 시작하기 →</button>
+    <button class="submit-btn" style="background:linear-gradient(135deg,#6b7280,#9ca3af);margin-top:10px;font-size:0.9em" onclick="fillTestData()">🧪 Tester Mode (랜덤 데이터 입력)</button>
+</div>
+
+<!-- ==================== SCALE I ==================== -->
+<div id="scale1" class="tab-content">
+
+    <!-- 1. 불면증 심각도 (ISI) -->
+    <div class="section">
+        <div class="section-title">1. 불면증 심각도 (ISI)</div>
+        <div class="section-desc">아래 각 질문에서 수면상황을 고려하여 해당번호에 V표 해주십시오.</div>
+
+        <div class="question">
+            <div class="question-text">1. 현재 (지난 2주) 불면문제(들)의 심각도를 평가하십시오.</div>
+            <div class="sub-question">
+                <div class="sub-question-text">1) 잠들기 어려움</div>
+                <div class="options">
+                    <label><input type="radio" name="isi_1a" value="0"><span>없음</span></label>
+                    <label><input type="radio" name="isi_1a" value="1"><span>약간</span></label>
+                    <label><input type="radio" name="isi_1a" value="2"><span>중간</span></label>
+                    <label><input type="radio" name="isi_1a" value="3"><span>심함</span></label>
+                    <label><input type="radio" name="isi_1a" value="4"><span>매우</span></label>
+                </div>
+            </div>
+            <div class="sub-question">
+                <div class="sub-question-text">2) 잠을 유지하기 어려움</div>
+                <div class="options">
+                    <label><input type="radio" name="isi_1b" value="0"><span>없음</span></label>
+                    <label><input type="radio" name="isi_1b" value="1"><span>약간</span></label>
+                    <label><input type="radio" name="isi_1b" value="2"><span>중간</span></label>
+                    <label><input type="radio" name="isi_1b" value="3"><span>심함</span></label>
+                    <label><input type="radio" name="isi_1b" value="4"><span>매우</span></label>
+                </div>
+            </div>
+            <div class="sub-question">
+                <div class="sub-question-text">3) 너무 일찍 깨는 문제</div>
+                <div class="options">
+                    <label><input type="radio" name="isi_1c" value="0"><span>없음</span></label>
+                    <label><input type="radio" name="isi_1c" value="1"><span>약간</span></label>
+                    <label><input type="radio" name="isi_1c" value="2"><span>중간</span></label>
+                    <label><input type="radio" name="isi_1c" value="3"><span>심함</span></label>
+                    <label><input type="radio" name="isi_1c" value="4"><span>매우</span></label>
+                </div>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-text">2. 현재 수면패턴에 대해 얼마나 만족/불만족합니까?</div>
+            <div class="options">
+                <label><input type="radio" name="isi_2" value="0"><span>매우 만족</span></label>
+                <label><input type="radio" name="isi_2" value="1"><span>만족</span></label>
+                <label><input type="radio" name="isi_2" value="2"><span>중간</span></label>
+                <label><input type="radio" name="isi_2" value="3"><span>불만족</span></label>
+                <label><input type="radio" name="isi_2" value="4"><span>매우 불만족</span></label>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-text">3. 수면문제로 일상 활동(예: 주간피로, 업무 혹은 일상적 가사능력, 집중력, 기억력, 기분 등)이 어느 정도까지 방해가 됩니까?</div>
+            <div class="options">
+                <label><input type="radio" name="isi_3" value="0"><span>전혀 방해되지 않음</span></label>
+                <label><input type="radio" name="isi_3" value="1"><span>조금 방해됨</span></label>
+                <label><input type="radio" name="isi_3" value="2"><span>다소 방해됨</span></label>
+                <label><input type="radio" name="isi_3" value="3"><span>많이 방해됨</span></label>
+                <label><input type="radio" name="isi_3" value="4"><span>매우 많이 방해됨</span></label>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-text">4. 수면문제가 다른 사람에 비해 얼마나 현저하게 삶의 질을 손상시키고 있다고 생각합니까?</div>
+            <div class="options">
+                <label><input type="radio" name="isi_4" value="0"><span>전혀 현저하지 않음</span></label>
+                <label><input type="radio" name="isi_4" value="1"><span>조금 현저함</span></label>
+                <label><input type="radio" name="isi_4" value="2"><span>다소 현저함</span></label>
+                <label><input type="radio" name="isi_4" value="3"><span>많이 현저함</span></label>
+                <label><input type="radio" name="isi_4" value="4"><span>매우 많이 현저함</span></label>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-text">5. 현재 수면문제에 관하여 얼마나 걱정/괴로워합니까?</div>
+            <div class="options">
+                <label><input type="radio" name="isi_5" value="0"><span>전혀</span></label>
+                <label><input type="radio" name="isi_5" value="1"><span>조금</span></label>
+                <label><input type="radio" name="isi_5" value="2"><span>다소</span></label>
+                <label><input type="radio" name="isi_5" value="3"><span>많이</span></label>
+                <label><input type="radio" name="isi_5" value="4"><span>매우 많이</span></label>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. STOP-Bang -->
+    <div class="section">
+        <div class="section-title">2. 수면무호흡 위험도평가 (STOP-Bang)</div>
+        <div class="section-desc">각 항목에 예 또는 아니오로 답해 주십시오.</div>
+
+        <div class="question">
+            <div class="question-text">(S) 귀하는 코를 크게 곱니까?<br><small style="color:#64748b">문이 닫힌 상태에서 밖에서 들을 수 있을 정도 또는 같이 잠을 자는 상대가 귀하가 밤에 코를 곤다고 밀쳐 낼 정도로 큰 경우</small></div>
+            <div class="yesno-options">
+                <label><input type="radio" name="stop_s" value="1">예</label>
+                <label><input type="radio" name="stop_s" value="0">아니오</label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">(T) 피곤합니까?<br><small style="color:#64748b">낮 동안 종종 지치거나 피곤하거나 졸림을 느낍니까?(예:운전중 졸드는 것)</small></div>
+            <div class="yesno-options">
+                <label><input type="radio" name="stop_t" value="1">예</label>
+                <label><input type="radio" name="stop_t" value="0">아니오</label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">(O) 누군가가 보았습니까?<br><small style="color:#64748b">귀하가 수면 중에 숨을 멈추거나 숨이 막히거나 숨을 헐떡이는 것을 누군가가 보았습니까?</small></div>
+            <div class="yesno-options">
+                <label><input type="radio" name="stop_o" value="1">예</label>
+                <label><input type="radio" name="stop_o" value="0">아니오</label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">(P) 혈압이 있습니까? 고혈압이 있거나 치료를 받고 있습니까?</div>
+            <div class="yesno-options">
+                <label><input type="radio" name="stop_p" value="1">예</label>
+                <label><input type="radio" name="stop_p" value="0">아니오</label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">(B) 체질량지수(BMI:kg/m2)가 30보다 높습니까?</div>
+            <div class="yesno-options">
+                <label><input type="radio" name="stop_b" value="1">예</label>
+                <label><input type="radio" name="stop_b" value="0">아니오</label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">(A) 나이가 50세보다 많습니까?</div>
+            <div class="yesno-options">
+                <label><input type="radio" name="stop_a" value="1">예</label>
+                <label><input type="radio" name="stop_a" value="0">아니오</label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">(N) 목둘레가 큽니까? (목젖주위로 측정 : 남성>43cm, 여성>41cm)</div>
+            <div class="yesno-options">
+                <label><input type="radio" name="stop_n" value="1">예</label>
+                <label><input type="radio" name="stop_n" value="0">아니오</label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">(G) 성별이 남성입니까?</div>
+            <div class="yesno-options">
+                <label><input type="radio" name="stop_g" value="1">예</label>
+                <label><input type="radio" name="stop_g" value="0">아니오</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 한국판 엡워스 졸음 척도 (ESS) -->
+    <div class="section">
+        <div class="section-title">3. 한국판 엡워스 졸음 척도 (Korean ESS)</div>
+        <div class="section-desc">단순한 피곤함과는 다르게 다음의 상황에서 얼마나 깜박 졸거나 혹은 잠들어버릴 것 같습니까? 최근의 일상생활을 참고하시기 바랍니다.</div>
+
+        <div class="question" id="ess_q1">
+            <div class="question-text">1. 앉아서 책(신문, 잡지, 서류 등)을 읽을 때</div>
+            <div class="options">
+                <label><input type="radio" name="ess_1" value="0"><span>전혀</span></label>
+                <label><input type="radio" name="ess_1" value="1"><span>조금</span></label>
+                <label><input type="radio" name="ess_1" value="2"><span>상당히</span></label>
+                <label><input type="radio" name="ess_1" value="3"><span>매우많이</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">2. TV 볼 때</div>
+            <div class="options">
+                <label><input type="radio" name="ess_2" value="0"><span>전혀</span></label>
+                <label><input type="radio" name="ess_2" value="1"><span>조금</span></label>
+                <label><input type="radio" name="ess_2" value="2"><span>상당히</span></label>
+                <label><input type="radio" name="ess_2" value="3"><span>매우많이</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">3. 공공장소(모임, 극장 등)에서 가만히 앉아 있을 때</div>
+            <div class="options">
+                <label><input type="radio" name="ess_3" value="0"><span>전혀</span></label>
+                <label><input type="radio" name="ess_3" value="1"><span>조금</span></label>
+                <label><input type="radio" name="ess_3" value="2"><span>상당히</span></label>
+                <label><input type="radio" name="ess_3" value="3"><span>매우많이</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">4. 쉬지 않이 1시간 동안 운행 중인 차(자동차, 버스, 열차)에 승객으로 앉아 있을 때</div>
+            <div class="options">
+                <label><input type="radio" name="ess_4" value="0"><span>전혀</span></label>
+                <label><input type="radio" name="ess_4" value="1"><span>조금</span></label>
+                <label><input type="radio" name="ess_4" value="2"><span>상당히</span></label>
+                <label><input type="radio" name="ess_4" value="3"><span>매우많이</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">5. 오후에 주위상황이 허락되어 쉬려고 누워 있을 때</div>
+            <div class="options">
+                <label><input type="radio" name="ess_5" value="0"><span>전혀</span></label>
+                <label><input type="radio" name="ess_5" value="1"><span>조금</span></label>
+                <label><input type="radio" name="ess_5" value="2"><span>상당히</span></label>
+                <label><input type="radio" name="ess_5" value="3"><span>매우많이</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">6. 앉아서 상대방과 이야기할 때</div>
+            <div class="options">
+                <label><input type="radio" name="ess_6" value="0"><span>전혀</span></label>
+                <label><input type="radio" name="ess_6" value="1"><span>조금</span></label>
+                <label><input type="radio" name="ess_6" value="2"><span>상당히</span></label>
+                <label><input type="radio" name="ess_6" value="3"><span>매우많이</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">7. 점심식사 후 조용히 앉아 있을 때</div>
+            <div class="options">
+                <label><input type="radio" name="ess_7" value="0"><span>전혀</span></label>
+                <label><input type="radio" name="ess_7" value="1"><span>조금</span></label>
+                <label><input type="radio" name="ess_7" value="2"><span>상당히</span></label>
+                <label><input type="radio" name="ess_7" value="3"><span>매우많이</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">8. 교통 혼잡으로 몇 분 동안 멈춰선 차 안에서</div>
+            <div class="options">
+                <label><input type="radio" name="ess_8" value="0"><span>전혀</span></label>
+                <label><input type="radio" name="ess_8" value="1"><span>조금</span></label>
+                <label><input type="radio" name="ess_8" value="2"><span>상당히</span></label>
+                <label><input type="radio" name="ess_8" value="3"><span>매우많이</span></label>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. 하지불안증후군 진단기준 -->
+    <div class="section">
+        <div class="section-title">4. 하지 불안 증후군 (RLS 진단기준)</div>
+        <div class="section-desc">아래 4가지 필수 진단기준에 모두 해당되면 하지불안증후군으로 진단합니다.</div>
+
+        <div class="question">
+            <div class="question-text">1. 다리를 움직이고 싶은 충동, 대개 다리에 불편하거나 불쾌한 느낌이 동반된다.<br><small style="color:#64748b">(때때로 불편한 느낌 없이 다리를 움직이고 싶은 충동을 느끼거나, 다리와 함께 팔 또는 다른 신체부위의 증상이 동반되기도 한다.)</small></div>
+            <div class="yesno-options">
+                <label><input type="radio" name="rls_1" value="1">예</label>
+                <label><input type="radio" name="rls_1" value="0">아니오</label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">2. 움직이고 싶은 충동이나 불쾌한 느낌이 쉬거나 누워있거나 앉아 있을 때처럼 움직이지 않을 때 시작되거나 더 악화된다.</div>
+            <div class="yesno-options">
+                <label><input type="radio" name="rls_2" value="1">예</label>
+                <label><input type="radio" name="rls_2" value="0">아니오</label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">3. 움직이고 싶은 충동이나 불쾌한 느낌은 걷거나 뻗을 때처럼 움직임에 따라 부분적으로나 전체적으로 완화된다.</div>
+            <div class="yesno-options">
+                <label><input type="radio" name="rls_3" value="1">예</label>
+                <label><input type="radio" name="rls_3" value="0">아니오</label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">4. 움직이고 싶은 충동이나 불쾌한 느낌은 낮 시간보다 저녁이나 밤에 더 나빠지거나, 단지 저녁이나 밤에 발생한다.<br><small style="color:#64748b">(증상이 매우 심해지면 야간 악화가 현저하지는 않지만, 과거에는 그런 증상이 있었다.)</small></div>
+            <div class="yesno-options">
+                <label><input type="radio" name="rls_4" value="1">예</label>
+                <label><input type="radio" name="rls_4" value="0">아니오</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. SF-36 -->
+    <div class="section">
+        <div class="section-title">5. 건강관련 삶의 질 척도 (SF-36) ver.2</div>
+        <div class="section-desc">지난 한 달 동안의 건강상태에 대한 질문입니다.</div>
+
+        <div class="question">
+            <div class="question-text">1. 평소 당신의 건강상태에 대해서 어떻게 생각하십니까?</div>
+            <div class="options">
+                <label><input type="radio" name="sf_1" value="5"><span>매우 좋다</span></label>
+                <label><input type="radio" name="sf_1" value="4"><span>좋다</span></label>
+                <label><input type="radio" name="sf_1" value="3"><span>보통이다</span></label>
+                <label><input type="radio" name="sf_1" value="2"><span>별로 좋지 않다</span></label>
+                <label><input type="radio" name="sf_1" value="1"><span>매우 좋지 않다</span></label>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-text">2. 1년 전과 비교해서, 현재의 당신의 건강상태가 어떻다고 생각하십니까?</div>
+            <div class="options">
+                <label><input type="radio" name="sf_2" value="5"><span>1년 전보다 매우 좋다</span></label>
+                <label><input type="radio" name="sf_2" value="4"><span>1년 전보다 좋은 편이다</span></label>
+                <label><input type="radio" name="sf_2" value="3"><span>1년 전과 비슷하다</span></label>
+                <label><input type="radio" name="sf_2" value="2"><span>1년 전보다 조금 나빠졌다</span></label>
+                <label><input type="radio" name="sf_2" value="1"><span>1년 전보다 많이 나빠졌다</span></label>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-text">3. 다음의 항목은 일상생활에서의 활동에 관한 항목들입니다. 건강상의 이유로 다음의 활동을 하는 것이 어렵다고 느끼십니까?</div>
+            <div class="sub-question" id="sf3_items"></div>
+        </div>
+
+        <div class="question">
+            <div class="question-text">4. 지난 한 달 동안, 일(가사 포함)이나 일상적인 활동을 하실 때, 신체적인 이유로 다음과 같은 문제가 어느 정도 있었습니까?</div>
+            <div class="sub-question" id="sf4_items"></div>
+        </div>
+
+        <div class="question">
+            <div class="question-text">5. 지난 한 달 동안, 일(가사 포함)이나 일상적인 활동을 하실 때, 심리적인 이유(예를 들면, 우울하거나 불안을 느끼거나 하는 등의 이유)로 다음과 같은 문제가 어느 정도 있었습니까?</div>
+            <div class="sub-question" id="sf5_items"></div>
+        </div>
+
+        <div class="question">
+            <div class="question-text">6. 지난 한 달 동안, 신체적 또는 심리적인 이유로 인해 가족, 친구, 이웃, 그 의의 아는 사람들과의 일상적인 사회 활동에 어느 정도 지장을 받았습니까?</div>
+            <div class="options">
+                <label><input type="radio" name="sf_6" value="5"><span>전혀 지장이 없었다</span></label>
+                <label><input type="radio" name="sf_6" value="4"><span>적지만 지장이 있었다</span></label>
+                <label><input type="radio" name="sf_6" value="3"><span>어느 정도 지장이 있었다</span></label>
+                <label><input type="radio" name="sf_6" value="2"><span>많은 지장이 있었다</span></label>
+                <label><input type="radio" name="sf_6" value="1"><span>매우 많은 지장이 있었다</span></label>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-text">7. 지난 한 달 동안, 신체적인 통증을 어느 정도 느꼈습니까?</div>
+            <div class="options">
+                <label><input type="radio" name="sf_7" value="6"><span>전혀 없었다</span></label>
+                <label><input type="radio" name="sf_7" value="5"><span>희미한 통증을 느꼈다</span></label>
+                <label><input type="radio" name="sf_7" value="4"><span>어느 정도 통증이 있었다</span></label>
+                <label><input type="radio" name="sf_7" value="3"><span>많은 통증이 있었다</span></label>
+                <label><input type="radio" name="sf_7" value="2"><span>매우 많은 통증이 있었다</span></label>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-text">8. 지난 한 달 동안, 신체적인 통증으로 인해 일상적인 일(외부활동과 가사를 포함해서)에 어느 정도 지장을 받았습니까?</div>
+            <div class="options">
+                <label><input type="radio" name="sf_8" value="5"><span>전혀 지장이 없었다</span></label>
+                <label><input type="radio" name="sf_8" value="4"><span>적지만 지장이 있었다</span></label>
+                <label><input type="radio" name="sf_8" value="3"><span>어느 정도 지장이 있었다</span></label>
+                <label><input type="radio" name="sf_8" value="2"><span>많은 지장이 있었다</span></label>
+                <label><input type="radio" name="sf_8" value="1"><span>매우 많은 지장이 있었다</span></label>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-text">9. 다음의 질문들은 지난 한 달 동안에 일상적으로 어떤 일들이 있었고, 당신이 어떻게 느꼈는지에 관한 것입니다.</div>
+            <div class="sub-question" id="sf9_items"></div>
+        </div>
+
+        <div class="question">
+            <div class="question-text">10. 지난 한 달 동안, 친구나 친척을 방문하는 등, 사람들과의 만남의 시간이 신체적 또는 심리적인 이유로 어느 정도 지장을 받았습니까?</div>
+            <div class="options">
+                <label><input type="radio" name="sf_10" value="1"><span>항상 지장이 있었다</span></label>
+                <label><input type="radio" name="sf_10" value="2"><span>거의 항상 지장이 있었다</span></label>
+                <label><input type="radio" name="sf_10" value="3"><span>때때로 지장이 있었다</span></label>
+                <label><input type="radio" name="sf_10" value="4"><span>드물게 지장이 있었다</span></label>
+                <label><input type="radio" name="sf_10" value="5"><span>전혀 지장이 없었다</span></label>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-text">11. 다음의 각 항목이 당신에게 어느 정도 적용된다고 생각하십니까?</div>
+            <div class="sub-question" id="sf11_items"></div>
+        </div>
+    </div>
+
+    <button class="submit-btn" onclick="goToScale2()">Scale II 작성하기 →</button>
+</div>
+
+<!-- ==================== SCALE II ==================== -->
+<div id="scale2" class="tab-content">
+
+    <!-- 1. PSQI-K -->
+    <div class="section">
+        <div class="section-title">1. 한국판 피처버그 수면의 질 지수 (PSQI-K)</div>
+        <div class="section-desc">다음은 지난 1달(4주) 동안 당신의 일상적인 수면습관에 관한 질문입니다. 지난 1달 동안 대부분의 일상에서 가장 적합한 답변을 해주시기 바랍니다.</div>
+
+        <div class="question">
+            <div class="question-text">1. 지난 한달 동안, 당신은 평소 몇 시에 잠자리에 들었습니까?</div>
+            <div class="time-input">
+                <span>보통</span>
+                <select id="psqi_1_ampm"><option value="pm">오후</option><option value="am">오전</option></select>
+                <input type="number" id="psqi_1_hour" min="1" max="12" placeholder="시">
+                <span>시</span>
+                <input type="number" id="psqi_1_min" min="0" max="59" placeholder="분">
+                <span>분</span>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">2. 지난 한달 동안, 당신은 밤에 잠자리에 들어서 잠들기까지 보통 얼마나 오래 걸렸습니까?</div>
+            <div class="time-input">
+                <input type="number" id="psqi_2_hour" min="0" max="23" placeholder="시간">
+                <span>시간</span>
+                <input type="number" id="psqi_2_min" min="0" max="59" placeholder="분">
+                <span>분</span>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">3. 지난 한달 동안, 당신은 평소 아침 몇 시에 일어났습니까?</div>
+            <div class="time-input">
+                <span>보통</span>
+                <select id="psqi_3_ampm"><option value="am">오전</option><option value="pm">오후</option></select>
+                <input type="number" id="psqi_3_hour" min="1" max="12" placeholder="시">
+                <span>시</span>
+                <input type="number" id="psqi_3_min" min="0" max="59" placeholder="분">
+                <span>분</span>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">4. 지난 한달 동안, 당신이 밤에 실제로 잠잔 시간은 얼마나 됩니까?</div>
+            <div class="time-input">
+                <span>하루 밤에</span>
+                <input type="number" id="psqi_4_hour" min="0" max="24" placeholder="시간">
+                <span>시간</span>
+                <input type="number" id="psqi_4_min" min="0" max="59" placeholder="분">
+                <span>분</span>
+            </div>
+        </div>
+
+        <div class="question">
+            <div class="question-text">5. 지난 한달 동안, 당신은 아래의 이유로 잠자는 데 얼마나 자주 문제가 있었습니까?</div>
+            <div id="psqi5_items"></div>
+        </div>
+
+        <div class="question">
+            <div class="question-text">6. 지난 한달 동안, 당신은 전반적으로 수면의 질이 어느 정도라고 평가하십니까?</div>
+            <div class="options">
+                <label><input type="radio" name="psqi_6" value="0"><span>매우 좋음</span></label>
+                <label><input type="radio" name="psqi_6" value="1"><span>상당히 좋음</span></label>
+                <label><input type="radio" name="psqi_6" value="2"><span>상당히 나쁨</span></label>
+                <label><input type="radio" name="psqi_6" value="3"><span>매우 나쁨</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">7. 지난 한달 동안, 당신은 잠이 들기 위해 얼마나 자주 약을 복용했습니까? (처방약 또는 약국에서 구입한 약)</div>
+            <div class="options">
+                <label><input type="radio" name="psqi_7" value="0"><span>지난 한달 동안 없었다</span></label>
+                <label><input type="radio" name="psqi_7" value="1"><span>한 주에 1번보다 적게</span></label>
+                <label><input type="radio" name="psqi_7" value="2"><span>한 주에 1-2번 정도</span></label>
+                <label><input type="radio" name="psqi_7" value="3"><span>한 주에 3번 이상</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">8. 지난 한달 동안, 당신은 운전하거나, 식사 때 혹은 사회활동을 하는 동안 얼마나 자주 졸음을 느꼈습니까?</div>
+            <div class="options">
+                <label><input type="radio" name="psqi_8" value="0"><span>지난 한달 동안 없었다</span></label>
+                <label><input type="radio" name="psqi_8" value="1"><span>한 주에 1번보다 적게</span></label>
+                <label><input type="radio" name="psqi_8" value="2"><span>한 주에 1-2번 정도</span></label>
+                <label><input type="radio" name="psqi_8" value="3"><span>한 주에 3번 이상</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">9. 지난 한달 동안, 당신은 일에 열중하는데 얼마나 많은 문제가 있었습니까?</div>
+            <div class="options">
+                <label><input type="radio" name="psqi_9" value="0"><span>전혀 없었다</span></label>
+                <label><input type="radio" name="psqi_9" value="1"><span>매우 조금 있었다</span></label>
+                <label><input type="radio" name="psqi_9" value="2"><span>다소 있었다</span></label>
+                <label><input type="radio" name="psqi_9" value="3"><span>매우 많이 있었다</span></label>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. DBAS-16 -->
+    <div class="section">
+        <div class="section-title">2. 한국판 수면에 대한 역기능적 신념 및 태도 척도 (DBAS-16)</div>
+        <div class="section-desc">아래에 제시된 내용은 사람들이 수면에 대해 갖고 있는 생각과 태도를 적은 것입니다. 각각의 문장에 대해 동의하는 정도를 표시해 주십시오. 정답은 없습니다. 당신이 갖고 있는 개인적인 생각의 정도에 체크해 주십시오.</div>
+
+        <div id="dbas_items"></div>
+    </div>
+
+    <!-- 3. K-IRLS -->
+    <div class="section" id="irls_section" style="position:relative">
+        <div id="irls_overlay" style="display:block;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.8);z-index:10;border-radius:12px;display:flex;align-items:center;justify-content:center">
+            <div style="text-align:center;padding:20px;background:#fef2f2;border:2px solid #fca5a5;border-radius:10px;max-width:80%">
+                <strong style="color:#991b1b">작성 불가</strong><br>
+                <span style="color:#b91c1c;font-size:0.9em">Sleep Scale I의 하지불안증후군(RLS) 4개 진단기준이 모두 '예'인 경우에만 작성할 수 있습니다.</span>
+            </div>
+        </div>
+        <div class="section-title">3. 한국판 국제하지불안척도 (K-IRLS ver 2.2)</div>
+        <div class="section-desc">지시사항 : 하지불안증후군 증상이 있는 경우만 답하세요. <strong>지난주에</strong> 대해 답해주십시오.</div>
+
+        <div class="question">
+            <div class="question-text">1. 전반적으로, 하지불안증후군으로 인한 팔, 다리의 불쾌감을 어떻게 평가하시겠습니까?</div>
+            <div class="options">
+                <label><input type="radio" name="irls_1" value="4"><span>매우 심했다</span></label>
+                <label><input type="radio" name="irls_1" value="3"><span>심했다</span></label>
+                <label><input type="radio" name="irls_1" value="2"><span>보통이었다</span></label>
+                <label><input type="radio" name="irls_1" value="1"><span>가벼웠다</span></label>
+                <label><input type="radio" name="irls_1" value="0"><span>없었다</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">2. 전반적으로, 하지불안증후군 때문에 움직여야 하는 필요성을 어떻게 평가하시겠습니까?</div>
+            <div class="options">
+                <label><input type="radio" name="irls_2" value="4"><span>매우 심했다</span></label>
+                <label><input type="radio" name="irls_2" value="3"><span>심했다</span></label>
+                <label><input type="radio" name="irls_2" value="2"><span>보통이었다</span></label>
+                <label><input type="radio" name="irls_2" value="1"><span>가벼웠다</span></label>
+                <label><input type="radio" name="irls_2" value="0"><span>없었다</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">3. 전반적으로, 하지불안증후군으로 인한 팔 혹은 다리의 불쾌감은 팔이나 다리를 움직임으로써 얼마나 줄어들었습니까?</div>
+            <div class="options">
+                <label><input type="radio" name="irls_3" value="4"><span>줄어들지 않았다</span></label>
+                <label><input type="radio" name="irls_3" value="3"><span>약간 줄어들었다</span></label>
+                <label><input type="radio" name="irls_3" value="2"><span>보통으로 줄어들었다</span></label>
+                <label><input type="radio" name="irls_3" value="1"><span>거의 완전히 줄어들었다</span></label>
+                <label><input type="radio" name="irls_3" value="0"><span>하지불안 증상이 없었다</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">4. 하지불안증후군 증상으로 인해 수면장애는 얼마나 심했습니까?</div>
+            <div class="options">
+                <label><input type="radio" name="irls_4" value="4"><span>매우 심했다</span></label>
+                <label><input type="radio" name="irls_4" value="3"><span>심했다</span></label>
+                <label><input type="radio" name="irls_4" value="2"><span>보통이었다</span></label>
+                <label><input type="radio" name="irls_4" value="1"><span>가벼웠다</span></label>
+                <label><input type="radio" name="irls_4" value="0"><span>없었다</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">5. 하지불안증후군 증상으로 인해 낮에 느끼는 피곤함과 졸림은 얼마나 심했습니까?</div>
+            <div class="options">
+                <label><input type="radio" name="irls_5" value="4"><span>매우 심했다</span></label>
+                <label><input type="radio" name="irls_5" value="3"><span>심했다</span></label>
+                <label><input type="radio" name="irls_5" value="2"><span>보통이었다</span></label>
+                <label><input type="radio" name="irls_5" value="1"><span>가벼웠다</span></label>
+                <label><input type="radio" name="irls_5" value="0"><span>없었다</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">6. 하지불안증후군은 대체로 얼마나 심했습니까?</div>
+            <div class="options">
+                <label><input type="radio" name="irls_6" value="4"><span>매우 심했다</span></label>
+                <label><input type="radio" name="irls_6" value="3"><span>심했다</span></label>
+                <label><input type="radio" name="irls_6" value="2"><span>보통이었다</span></label>
+                <label><input type="radio" name="irls_6" value="1"><span>가벼웠다</span></label>
+                <label><input type="radio" name="irls_6" value="0"><span>없었다</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">7. 하지불안증후군 증상을 얼마나 자주 경험했습니까?</div>
+            <div class="options">
+                <label><input type="radio" name="irls_7" value="4"><span>매우 자주 (1주일에 6-7일)</span></label>
+                <label><input type="radio" name="irls_7" value="3"><span>자주 (1주일에 4-5일)</span></label>
+                <label><input type="radio" name="irls_7" value="2"><span>때때로 (1주일에 2-3일)</span></label>
+                <label><input type="radio" name="irls_7" value="1"><span>간혹 (1주일에 하루)</span></label>
+                <label><input type="radio" name="irls_7" value="0"><span>전혀 없었다</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">8. 하지불안증후군 증상이 있을 때 증상은 평균적으로 얼마나 심했습니까?</div>
+            <div class="options">
+                <label><input type="radio" name="irls_8" value="4"><span>매우 심했다 (하루8시간이상)</span></label>
+                <label><input type="radio" name="irls_8" value="3"><span>심했다 (하루3-8시간)</span></label>
+                <label><input type="radio" name="irls_8" value="2"><span>보통이었다 (하루1-3시간)</span></label>
+                <label><input type="radio" name="irls_8" value="1"><span>가벼웠다 (하루1시간미만)</span></label>
+                <label><input type="radio" name="irls_8" value="0"><span>없었다</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">9. 전반적으로 하지불안증후군 증상이 일상적인 활동(예를 들면; 만족스런 가족관계, 가정생활, 사회생활, 학교생활 또는 직장생활)을 하는데 미친 영향은 얼마나 심했습니까?</div>
+            <div class="options">
+                <label><input type="radio" name="irls_9" value="4"><span>매우 심했다</span></label>
+                <label><input type="radio" name="irls_9" value="3"><span>심했다</span></label>
+                <label><input type="radio" name="irls_9" value="2"><span>보통이었다</span></label>
+                <label><input type="radio" name="irls_9" value="1"><span>가벼웠다</span></label>
+                <label><input type="radio" name="irls_9" value="0"><span>없었다</span></label>
+            </div>
+        </div>
+        <div class="question">
+            <div class="question-text">10. 하지불안증후군 증상으로 인한 기분장애(예를 들면; 화남, 우울, 슬픔, 불안, 예민함 등)가 얼마나 심했습니까?</div>
+            <div class="options">
+                <label><input type="radio" name="irls_10" value="4"><span>매우 심했다</span></label>
+                <label><input type="radio" name="irls_10" value="3"><span>심했다</span></label>
+                <label><input type="radio" name="irls_10" value="2"><span>보통이었다</span></label>
+                <label><input type="radio" name="irls_10" value="1"><span>가벼웠다</span></label>
+                <label><input type="radio" name="irls_10" value="0"><span>없었다</span></label>
+            </div>
+        </div>
+    </div>
+
+    <button class="submit-btn" onclick="calculateAll()">결과 보기</button>
+</div>
+
+<!-- ==================== RESULTS ==================== -->
+<div id="results" class="tab-content">
+    <div class="section">
+        <div class="section-title">검사 결과</div>
+        <div class="info-box">
+            <h4>환자 정보</h4>
+            <p id="result_patient_info">검사를 완료한 후 결과를 확인하세요.</p>
+        </div>
+        <div id="results_container"></div>
+        <button class="print-btn" onclick="window.print()">결과 인쇄</button>
+        <button class="print-btn" style="background:#217346;margin-left:10px" onclick="exportToExcel()">Excel 내보내기</button>
+    </div>
+</div>
+
+<script>
+// === Dynamic content generation ===
+document.addEventListener('DOMContentLoaded', function() {
+    generateSF36Items();
+    generatePSQI5Items();
+    generateDBASItems();
+    document.getElementById('eval_date').valueAsDate = new Date();
+
+    // BMI 자동 계산
+    const heightEl = document.getElementById('patient_height');
+    const weightEl = document.getElementById('patient_weight');
+    function calcBMI() {
+        const h = parseFloat(heightEl.value) / 100;
+        const w = parseFloat(weightEl.value);
+        if (h > 0 && w > 0) {
+            document.getElementById('patient_bmi').value = (w / (h * h)).toFixed(1);
+        } else {
+            document.getElementById('patient_bmi').value = '';
+        }
+    }
+    heightEl.addEventListener('input', calcBMI);
+    weightEl.addEventListener('input', calcBMI);
+
+    // RLS 4개 모두 '예'일 때만 K-IRLS 작성 가능
+    function checkRLS() {
+        let allYes = true;
+        for (let i = 1; i <= 4; i++) {
+            const v = getRadioValue(`rls_${i}`);
+            if (v !== 1) { allYes = false; break; }
+        }
+        const overlay = document.getElementById('irls_overlay');
+        if (allYes) {
+            overlay.style.display = 'none';
+        } else {
+            overlay.style.display = 'flex';
+            // 선택된 IRLS 응답 초기화
+            for (let i = 1; i <= 10; i++) {
+                const checked = document.querySelector(`input[name="irls_${i}"]:checked`);
+                if (checked) checked.checked = false;
+            }
+        }
+    }
+    document.querySelectorAll('input[name^="rls_"]').forEach(el => {
+        el.addEventListener('change', checkRLS);
+    });
+    checkRLS();
+
+    // === Change 5: Job field disable logic ===
+    const jobSelect = document.getElementById('patient_job');
+    const jobNameInput = document.getElementById('patient_job_name');
+    const shiftSelect = document.getElementById('patient_shift');
+    function handleJobChange() {
+        const disabled = jobSelect.value === '무';
+        jobNameInput.disabled = disabled;
+        shiftSelect.disabled = disabled;
+        if (disabled) { jobNameInput.value = ''; shiftSelect.value = ''; }
+    }
+    jobSelect.addEventListener('change', handleJobChange);
+    handleJobChange();
+
+    // === Change 6: Caffeine disable logic ===
+    const caffeineSelect = document.getElementById('patient_caffeine');
+    const coffeeInput = document.getElementById('caffeine_coffee');
+    const teaInput = document.getElementById('caffeine_tea');
+    const drinkInput = document.getElementById('caffeine_drink');
+    function handleCaffeineChange() {
+        const disabled = caffeineSelect.value === '아니오';
+        coffeeInput.disabled = disabled;
+        teaInput.disabled = disabled;
+        drinkInput.disabled = disabled;
+        if (disabled) { coffeeInput.value = ''; teaInput.value = ''; drinkInput.value = ''; }
+    }
+    caffeineSelect.addEventListener('change', handleCaffeineChange);
+    handleCaffeineChange();
+
+    // === Change 7: Smoking options and disable logic ===
+    const smokeSelect = document.getElementById('patient_smoke');
+    const smokeStartAge = document.getElementById('smoke_start_age');
+    const smokeYears = document.getElementById('smoke_years');
+    const smokeQuitYear = document.getElementById('smoke_quit_year');
+    function handleSmokeChange() {
+        const val = smokeSelect.value;
+        if (val === '아니오') {
+            smokeStartAge.disabled = true;
+            smokeYears.disabled = true;
+            smokeQuitYear.disabled = true;
+            smokeStartAge.value = ''; smokeYears.value = ''; smokeQuitYear.value = '';
+        } else if (val === '예') {
+            smokeStartAge.disabled = false;
+            smokeYears.disabled = false;
+            smokeQuitYear.disabled = true;
+            smokeQuitYear.value = '';
+        } else if (val === '금연') {
+            smokeStartAge.disabled = false;
+            smokeYears.disabled = false;
+            smokeQuitYear.disabled = false;
+        } else {
+            smokeStartAge.disabled = false;
+            smokeYears.disabled = false;
+            smokeQuitYear.disabled = false;
+        }
+    }
+    smokeSelect.addEventListener('change', handleSmokeChange);
+    handleSmokeChange();
+
+    // === Change 8: Exercise disable logic ===
+    const exerciseSelect = document.getElementById('patient_exercise');
+    const exerciseType = document.getElementById('exercise_type');
+    const exerciseFreq = document.getElementById('exercise_freq');
+    const exerciseDuration = document.getElementById('exercise_duration');
+    function handleExerciseChange() {
+        const disabled = exerciseSelect.value === '아니오';
+        exerciseType.disabled = disabled;
+        exerciseFreq.disabled = disabled;
+        exerciseDuration.disabled = disabled;
+        if (disabled) { exerciseType.value = ''; exerciseFreq.value = ''; exerciseDuration.value = ''; }
+    }
+    exerciseSelect.addEventListener('change', handleExerciseChange);
+    handleExerciseChange();
+
+    // === Change 9: Disease/medicine disable logic ===
+    const diseaseSelect = document.getElementById('patient_disease');
+    const diseaseNameInput = document.getElementById('disease_name');
+    function handleDiseaseChange() {
+        const disabled = diseaseSelect.value === '아니오';
+        diseaseNameInput.disabled = disabled;
+        if (disabled) diseaseNameInput.value = '';
+    }
+    diseaseSelect.addEventListener('change', handleDiseaseChange);
+    handleDiseaseChange();
+
+    const medicineSelect = document.getElementById('patient_medicine');
+    const medicineNameInput = document.getElementById('medicine_name');
+    function handleMedicineChange() {
+        const disabled = medicineSelect.value === '아니오';
+        medicineNameInput.disabled = disabled;
+        if (disabled) medicineNameInput.value = '';
+    }
+    medicineSelect.addEventListener('change', handleMedicineChange);
+    handleMedicineChange();
+
+    // === Change 11: Auto-apply BMI/neck/gender to STOP-Bang ===
+    const genderSelect = document.getElementById('patient_gender');
+    const neckInput = document.getElementById('patient_neck');
+    const bmiInput = document.getElementById('patient_bmi');
+
+    function updateStopBangBMI() {
+        const bmi = parseFloat(bmiInput.value);
+        const radios = document.querySelectorAll('input[name="stop_b"]');
+        radios.forEach(r => r.disabled = true);
+        if (!isNaN(bmi) && bmi > 0) {
+            if (bmi > 30) {
+                document.querySelector('input[name="stop_b"][value="1"]').checked = true;
+            } else {
+                document.querySelector('input[name="stop_b"][value="0"]').checked = true;
+            }
+        } else {
+            radios.forEach(r => { r.checked = false; r.disabled = true; });
+        }
+    }
+
+    function updateStopBangNeck() {
+        const neck = parseFloat(neckInput.value);
+        const gender = genderSelect.value;
+        const radios = document.querySelectorAll('input[name="stop_n"]');
+        radios.forEach(r => r.disabled = true);
+        if (!isNaN(neck) && neck > 0 && gender) {
+            const threshold = gender === '남' ? 43 : 41;
+            if (neck > threshold) {
+                document.querySelector('input[name="stop_n"][value="1"]').checked = true;
+            } else {
+                document.querySelector('input[name="stop_n"][value="0"]').checked = true;
+            }
+        } else {
+            radios.forEach(r => { r.checked = false; r.disabled = true; });
+        }
+    }
+
+    function updateStopBangGender() {
+        const gender = genderSelect.value;
+        const radios = document.querySelectorAll('input[name="stop_g"]');
+        radios.forEach(r => r.disabled = true);
+        if (gender === '남') {
+            document.querySelector('input[name="stop_g"][value="1"]').checked = true;
+        } else if (gender === '여') {
+            document.querySelector('input[name="stop_g"][value="0"]').checked = true;
+        } else {
+            radios.forEach(r => { r.checked = false; r.disabled = true; });
+        }
+    }
+
+    // Override calcBMI to also update STOP-Bang
+    const origCalcBMI = calcBMI;
+    heightEl.removeEventListener('input', calcBMI);
+    weightEl.removeEventListener('input', calcBMI);
+    function calcBMIAndUpdate() {
+        origCalcBMI();
+        updateStopBangBMI();
+    }
+    heightEl.addEventListener('input', calcBMIAndUpdate);
+    weightEl.addEventListener('input', calcBMIAndUpdate);
+
+    // Age auto-calculation from birth date + STOP-Bang (A) auto-apply
+    const birthInput = document.getElementById('patient_birth');
+    const ageInput = document.getElementById('patient_age');
+    function calcAge() {
+        const birthVal = birthInput.value;
+        if (!birthVal) { ageInput.value = ''; updateStopBangAge(); return; }
+        const today = new Date();
+        const birth = new Date(birthVal);
+        let age = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+        ageInput.value = age;
+        updateStopBangAge();
+    }
+    function updateStopBangAge() {
+        const age = parseInt(ageInput.value);
+        const radios = document.querySelectorAll('input[name="stop_a"]');
+        radios.forEach(r => r.disabled = true);
+        if (!isNaN(age)) {
+            if (age > 50) {
+                document.querySelector('input[name="stop_a"][value="1"]').checked = true;
+            } else {
+                document.querySelector('input[name="stop_a"][value="0"]').checked = true;
+            }
+        }
+    }
+    birthInput.addEventListener('input', calcAge);
+    calcAge();
+
+    neckInput.addEventListener('input', updateStopBangNeck);
+    genderSelect.addEventListener('change', function() {
+        updateStopBangGender();
+        updateStopBangNeck();
+    });
+
+    // Initialize STOP-Bang auto values
+    updateStopBangBMI();
+    updateStopBangNeck();
+    updateStopBangGender();
+    updateStopBangAge();
+
+    // === Change 12: Refresh warning on info change ===
+    let resultsDisplayed = false;
+    let infoChanged = false;
+
+    // Track when results are displayed
+    const origDisplayResults = window.displayResults;
+    // We'll set a flag in calculateAll instead
+
+    // Listen for changes in 기본정보 tab
+    const infoTab = document.getElementById('info');
+    infoTab.addEventListener('input', function() {
+        if (resultsDisplayed) {
+            infoChanged = true;
+            showInfoWarning('기본정보가 수정되었습니다. 결과를 다시 계산해주세요.');
+        }
+    });
+    infoTab.addEventListener('change', function() {
+        if (resultsDisplayed) {
+            infoChanged = true;
+            showInfoWarning('기본정보가 수정되었습니다. 결과를 다시 계산해주세요.');
+        }
+    });
+
+    // Listen for changes in Scale I/II tabs
+    const scale1Tab = document.getElementById('scale1');
+    const scale2Tab = document.getElementById('scale2');
+    [scale1Tab, scale2Tab].forEach(tab => {
+        tab.addEventListener('input', function() {
+            if (resultsDisplayed) { showInfoWarning('검사 응답이 수정되었습니다. 결과를 다시 계산해주세요.'); }
+        });
+        tab.addEventListener('change', function() {
+            if (resultsDisplayed) { showInfoWarning('검사 응답이 수정되었습니다. 결과를 다시 계산해주세요.'); }
+        });
+    });
+
+    function showInfoWarning(msg) {
+        const existing = document.getElementById('info_change_warning');
+        if (existing) { existing.querySelector('span').textContent = msg; return; }
+        const warningDiv = document.createElement('div');
+        warningDiv.id = 'info_change_warning';
+        warningDiv.className = 'warning-banner';
+        warningDiv.innerHTML = `<span>${msg}</span><button onclick="recalculateResults()">결과 재계산</button>`;
+        const infoBox = document.querySelector('#results .info-box');
+        infoBox.parentNode.insertBefore(warningDiv, infoBox);
+    }
+
+    // Expose resultsDisplayed flag setter
+    window._setResultsDisplayed = function() { resultsDisplayed = true; };
+    window._removeInfoWarning = function() {
+        infoChanged = false;
+        const w = document.getElementById('info_change_warning');
+        if (w) w.remove();
+    };
+});
+
+function generateSF36Items() {
+    const sf3Items = [
+        '1) 격한 활동, 예를 들어, 달리기, 무거운 물건 들어올리기, 격한 스포츠에 참여하기',
+        '2) 적당한 활동, 예를 들어 밥상 들어 나르기, 집안 청소하기, 가벼운 스포츠에 참여하기',
+        '3) 시장바구니를 들거나 운반하기',
+        '4) 3-4층까지 계단 오르기',
+        '5) 2층까지 계단 오르기',
+        '6) 몸을 앞으로 구부리거나 무릎을 꿇다 구부렸다 하기',
+        '7) 1킬로미터 이상 걷기',
+        '8) 수백 미터 정도 걷기',
+        '9) 1백 미터 정도 걷기',
+        '10) 혼자서 목욕하기, 옷 갈아입기'
+    ];
+    let html = '';
+    sf3Items.forEach((item, i) => {
+        html += `<div style="margin-bottom:12px;padding:8px;border-bottom:1px solid #f0f0f0">
+            <div class="sub-question-text">${item}</div>
+            <div class="options">
+                <label><input type="radio" name="sf3_${i+1}" value="1"><span>많은 어려움이 있다</span></label>
+                <label><input type="radio" name="sf3_${i+1}" value="2"><span>약간의 어려움이 있다</span></label>
+                <label><input type="radio" name="sf3_${i+1}" value="3"><span>전혀 어려움이 없다</span></label>
+            </div></div>`;
+    });
+    document.getElementById('sf3_items').innerHTML = html;
+
+    const sf4Items = [
+        '1) 일이나 일상적인 활동의 시간을 줄였다',
+        '2) 일이나 일상적인 활동을 원하는 만큼 하지 못했다',
+        '3) 일이나 일상적인 활동 중에서 내용에 따라서는 못했던 것들이 있었다',
+        '4) 일이나 일상적인 활동을 하는 것이 어려웠다(예를 들어 평소보다 많은 노력이 필요했다 등)'
+    ];
+    html = '';
+    sf4Items.forEach((item, i) => {
+        html += `<div style="margin-bottom:12px;padding:8px;border-bottom:1px solid #f0f0f0">
+            <div class="sub-question-text">${item}</div>
+            <div class="options">
+                <label><input type="radio" name="sf4_${i+1}" value="1"><span>그렇다</span></label>
+                <label><input type="radio" name="sf4_${i+1}" value="2"><span>아니다</span></label>
+            </div></div>`;
+    });
+    document.getElementById('sf4_items').innerHTML = html;
+
+    const sf5Items = [
+        '1) 일이나 일상적인 활동의 시간을 줄였다',
+        '2) 일이나 일상적인 활동을 원하는 만큼 하지 못했다',
+        '3) 일이나 일상적인 활동을 평소처럼 집중해서 할 수 없었다'
+    ];
+    html = '';
+    sf5Items.forEach((item, i) => {
+        html += `<div style="margin-bottom:12px;padding:8px;border-bottom:1px solid #f0f0f0">
+            <div class="sub-question-text">${item}</div>
+            <div class="options">
+                <label><input type="radio" name="sf5_${i+1}" value="1"><span>그렇다</span></label>
+                <label><input type="radio" name="sf5_${i+1}" value="2"><span>아니다</span></label>
+            </div></div>`;
+    });
+    document.getElementById('sf5_items').innerHTML = html;
+
+    const sf9Items = [
+        '1) 의욕으로 가득 차 있었습니까?',
+        '2) 불안하고 초조했습니까?',
+        '3) 어떻게 할 수 없을 정도로의기소침해 있었습니까?',
+        '4) 안정되고 평온한 기분이었습니까?',
+        '5) 활력(에너지)으로 넘쳐 있었습니까?',
+        '6) 상심하고, 우울한 기분이었습니까?',
+        '7) 지쳤습니까?',
+        '8) 행복한 기분이었습니까?',
+        '9) 피곤을 느꼈습니까?'
+    ];
+    html = '';
+    sf9Items.forEach((item, i) => {
+        html += `<div style="margin-bottom:12px;padding:8px;border-bottom:1px solid #f0f0f0">
+            <div class="sub-question-text">${item}</div>
+            <div class="options">
+                <label><input type="radio" name="sf9_${i+1}" value="6"><span>항상</span></label>
+                <label><input type="radio" name="sf9_${i+1}" value="5"><span>거의 항상</span></label>
+                <label><input type="radio" name="sf9_${i+1}" value="4"><span>보통</span></label>
+                <label><input type="radio" name="sf9_${i+1}" value="3"><span>때때로</span></label>
+                <label><input type="radio" name="sf9_${i+1}" value="2"><span>드물게</span></label>
+                <label><input type="radio" name="sf9_${i+1}" value="1"><span>전혀 없음</span></label>
+            </div></div>`;
+    });
+    document.getElementById('sf9_items').innerHTML = html;
+
+    const sf11Items = [
+        '1) 나는 다른 사람들 보다 더 쉽게 아픈 것 같다',
+        '2) 나는 보통 사람들 만큼 건강하다',
+        '3) 나의 건강이 나빠질 것 같은 느낌이 든다',
+        '4) 나의 건강상태는 매우 좋다'
+    ];
+    html = '';
+    sf11Items.forEach((item, i) => {
+        html += `<div style="margin-bottom:12px;padding:8px;border-bottom:1px solid #f0f0f0">
+            <div class="sub-question-text">${item}</div>
+            <div class="options">
+                <label><input type="radio" name="sf11_${i+1}" value="1"><span>매우 그렇다</span></label>
+                <label><input type="radio" name="sf11_${i+1}" value="2"><span>거의 그렇다</span></label>
+                <label><input type="radio" name="sf11_${i+1}" value="3"><span>모르겠다</span></label>
+                <label><input type="radio" name="sf11_${i+1}" value="4"><span>거의 그렇지않다</span></label>
+                <label><input type="radio" name="sf11_${i+1}" value="5"><span>전혀 그렇지않다</span></label>
+            </div></div>`;
+    });
+    document.getElementById('sf11_items').innerHTML = html;
+}
+
+function generatePSQI5Items() {
+    const items = [
+        'a) 취침 후 30분 이내에 잠들 수 없었다.',
+        'b) 한밤중이나 새벽에 깼다.',
+        'c) 화장실에 가려고 일어나야 했다.',
+        'd) 편안하게 숨 쉴 수가 없었다.',
+        'e) 기침을 하거나 시끄럽게 코를 골았다.',
+        'f) 너무 춥다고 느꼈다.',
+        'g) 너무 덥다고 느꼈다.',
+        'h) 나쁜 꿈을 꾸었다.',
+        'i) 통증이 있었다.',
+        'j) 그 외에 다른 이유가 있다면, 기입해 주세요.'
+    ];
+    let html = '';
+    items.forEach((item, i) => {
+        const letter = String.fromCharCode(97+i);
+        html += `<div class="sub-question" style="margin-bottom:10px">
+            <div class="sub-question-text">${item}</div>`;
+        if (letter === 'j') {
+            html += `<div style="margin-bottom:8px;display:flex;align-items:center;gap:8px;margin-top:5px"><span style="font-size:0.9em;color:#475569;white-space:nowrap">(이유는?</span><input type="text" id="psqi5_j_text" placeholder="지난 한달 동안, 위에 기입한 이유들 때문에 잠자는 데 얼마나 자주 어려움이 있었습니까?" style="flex:1;padding:8px 12px;border:none;border-bottom:2px solid #cbd5e1;font-size:0.9em;background:transparent;color:#1a202c" ><span style="font-size:0.9em;color:#475569">)</span></div>`;
+        }
+        html += `<div class="options">
+                <label><input type="radio" name="psqi5_${letter}" value="0"><span>없었다</span></label>
+                <label><input type="radio" name="psqi5_${letter}" value="1"><span>한 주에 1번 미만</span></label>
+                <label><input type="radio" name="psqi5_${letter}" value="2"><span>한 주에 1-2번</span></label>
+                <label><input type="radio" name="psqi5_${letter}" value="3"><span>한 주에 3번 이상</span></label>
+            </div></div>`;
+    });
+    document.getElementById('psqi5_items').innerHTML = html;
+}
+
+function generateDBASItems() {
+    const items = [
+        '1. 낮에 기운을 차리고 일을 잘 하려면 8시간은 자야한다.',
+        '2. 전날 잠을 충분히 못 자면, 다음날 낮잠을 자거나 잠을 좀 더 오래자서 보충해야한다.',
+        '3. 만성 불면증이 내 건강에 심각한 영향을 미칠지도 모른다는 염려를 한다.',
+        '4. 잠을 잘 조절할 수 있는 능력을 잃을지도 모른다는 걱정을 한다.',
+        '5. 밤에 잠을 잘 못자면 다음날 일상 활동을 하는데 지장을 준다고 알고 있다.',
+        '6. 낮 동안 맑은 정신으로 일을 잘 하기 위해서는 밤에 잠을 잘 못 자느니 수면제를 먹는 것이 더 낫다고 생각한다.',
+        '7. 낮에 짜증나고 우울하거나 불안하게 느낀다면, 그건 대개 전날 밤에 잠을 잘 못 잤기 때문이다.',
+        '8. 하룻밤 잠을 잘 못자면, 그것이 그 주 전체의 수면 스케줄에 지장을 준다고 알고 있다.',
+        '9. 충분히 잠을 못자면 다음날 낮에 기능을 거의 할 수 없다.',
+        '10. 밤에 잠을 잘 수 있을 것인지 절대 예측할 수 없다.',
+        '11. 수면 장애로 인해 생기는 부정적인 문제들에 대처할 만한 능력이 거의 없다.',
+        '12. 낮에 피곤하고, 기력이 없거나 기능을 잘 못한다고 느낄 때, 보통 그 전날 밤에 잠을 자지 못했기 때문이다.',
+        '13. 불면증은 근본적으로 화학적 불균형에 의해 생긴다고 생각한다.',
+        '14. 불면증 때문에 인생을 즐기지 못하고 내가 원하는 것을 하지 못하게 된다고 느낀다.',
+        '15. 잠을 못 잘 때 유일한 해결책은 약물치료일 것이다.',
+        '16. 밤에 잠을 잘 못잣 다음날은 사회 혹은 가정에서 내가 해야 할 일들을 피하거나 취소하게 된다.'
+    ];
+    let html = '';
+    items.forEach((item, i) => {
+        html += `<div class="question">
+            <div class="question-text">${item}</div>
+            <div class="scale-options">
+                ${[1,2,3,4,5,6,7,8,9,10].map(n => `<label><input type="radio" name="dbas_${i+1}" value="${n}">${n}</label>`).join('')}
+            </div>
+            <div class="scale-labels"><span>전혀 그렇지 않다</span><span>보통이다</span><span>매우 그렇다</span></div>
+        </div>`;
+    });
+    document.getElementById('dbas_items').innerHTML = html;
+}
+
+// === Tab switching ===
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    const tabs = ['info','scale1','scale2','results'];
+    const idx = tabs.indexOf(tabId);
+    if (idx >= 0) document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+    window.scrollTo(0, 0);
+}
+
+function goToScale2() {
+    // Scale I 미응답 체크
+    let missing = findMissingItems(1);
+    if (missing.length > 0) {
+        alert(`Scale I에 선택되지 않은 항목이 있습니다.\n\n• ${missing.join('\n• ')}`);
+        return;
+    }
+    switchTab('scale2');
+}
+
+function calculateAll() {
+    // Scale I + II 미응답 체크
+    let missing1 = findMissingItems(1);
+    let missing2 = findMissingItems(2);
+    let allMissing = [];
+    if (missing1.length > 0) allMissing.push(...missing1.map(m => `[Scale I] ${m}`));
+    if (missing2.length > 0) allMissing.push(...missing2.map(m => `[Scale II] ${m}`));
+    if (allMissing.length > 0) {
+        alert(`다음 항목이 선택되지 않아 채점할 수 없습니다.\n(PSQI 5-j 항목 제외, 미선택 시 0점 처리)\n\n• ${allMissing.join('\n• ')}`);
+        return;
+    }
+    let results = [];
+    results.push(...getScale1Results());
+    results.push(...getScale2Results());
+    displayResults(results);
+}
+
+// === Scoring functions ===
+function getRadioValue(name) {
+    const el = document.querySelector(`input[name="${name}"]:checked`);
+    return el ? parseInt(el.value) : null;
+}
+
+function findMissingItems(scale) {
+    let missing = [];
+    if (scale === 1 || scale === 'all') {
+        const isiNames = {isi_1a:'ISI 1-1) 잠들기 어려움', isi_1b:'ISI 1-2) 잠을 유지하기 어려움', isi_1c:'ISI 1-3) 너무 일찍 깨는 문제', isi_2:'ISI 2번', isi_3:'ISI 3번', isi_4:'ISI 4번', isi_5:'ISI 5번'};
+        Object.entries(isiNames).forEach(([name, label]) => { if (!getRadioValue(name) && getRadioValue(name) !== 0) missing.push(label); });
+
+        for (let i = 1; i <= 8; i++) { if (getRadioValue(`ess_${i}`) === null) missing.push(`ESS ${i}번`); }
+
+        ['s','t','o','p'].forEach(c => { if (getRadioValue(`stop_${c}`) === null) missing.push(`STOP-Bang (${c.toUpperCase()})`); });
+
+        for (let i = 1; i <= 4; i++) { if (getRadioValue(`rls_${i}`) === null) missing.push(`RLS ${i}번`); }
+
+        // SF-36
+        if (getRadioValue('sf_1') === null) missing.push('SF-36 1번');
+        if (getRadioValue('sf_2') === null) missing.push('SF-36 2번');
+        for (let i = 1; i <= 10; i++) { if (getRadioValue(`sf3_${i}`) === null) missing.push(`SF-36 3-${i})`); }
+        for (let i = 1; i <= 4; i++) { if (getRadioValue(`sf4_${i}`) === null) missing.push(`SF-36 4-${i})`); }
+        for (let i = 1; i <= 3; i++) { if (getRadioValue(`sf5_${i}`) === null) missing.push(`SF-36 5-${i})`); }
+        if (getRadioValue('sf_6') === null) missing.push('SF-36 6번');
+        if (getRadioValue('sf_7') === null) missing.push('SF-36 7번');
+        if (getRadioValue('sf_8') === null) missing.push('SF-36 8번');
+        for (let i = 1; i <= 9; i++) { if (getRadioValue(`sf9_${i}`) === null) missing.push(`SF-36 9-${i})`); }
+        if (getRadioValue('sf_10') === null) missing.push('SF-36 10번');
+        for (let i = 1; i <= 4; i++) { if (getRadioValue(`sf11_${i}`) === null) missing.push(`SF-36 11-${i})`); }
+    }
+    if (scale === 2 || scale === 'all') {
+        // K-IRLS: RLS 4개 모두 '예'인 경우에만 검증
+        let rlsAllYes = true;
+        for (let i = 1; i <= 4; i++) { if (getRadioValue(`rls_${i}`) !== 1) { rlsAllYes = false; break; } }
+        if (rlsAllYes) {
+            for (let i = 1; i <= 10; i++) { if (getRadioValue(`irls_${i}`) === null) missing.push(`K-IRLS ${i}번`); }
+        }
+
+        // PSQI (j 제외)
+        ['a','b','c','d','e','f','g','h','i'].forEach(c => { if (getRadioValue(`psqi5_${c}`) === null) missing.push(`PSQI 5-${c})`); });
+        if (getRadioValue('psqi_6') === null) missing.push('PSQI 6번');
+        if (getRadioValue('psqi_7') === null) missing.push('PSQI 7번');
+        if (getRadioValue('psqi_8') === null) missing.push('PSQI 8번');
+        if (getRadioValue('psqi_9') === null) missing.push('PSQI 9번');
+
+        for (let i = 1; i <= 16; i++) { if (getRadioValue(`dbas_${i}`) === null) missing.push(`DBAS ${i}번`); }
+    }
+    return missing;
+}
+
+function getScale1Results() {
+    let results = [];
+
+    // ISI
+    const isiItems = ['isi_1a','isi_1b','isi_1c','isi_2','isi_3','isi_4','isi_5'];
+    let isiSum = 0, isiCount = 0;
+    isiItems.forEach(name => {
+        const v = getRadioValue(name);
+        if (v !== null) { isiSum += v; isiCount++; }
+    });
+    let isiInterp = '', isiClass = '';
+    if (isiCount === 7) {
+        if (isiSum <= 7) { isiInterp = '임상적 불면증 없음 (0-7)'; isiClass = 'result-normal'; }
+        else if (isiSum <= 14) { isiInterp = '역치하 불면증 (8-14)'; isiClass = 'result-mild'; }
+        else if (isiSum <= 21) { isiInterp = '중등도 불면증 (15-21)'; isiClass = 'result-moderate'; }
+        else { isiInterp = '중증 불면증 (22-28)'; isiClass = 'result-severe'; }
+    }
+    results.push({ title: '불면증 심각도 (ISI)', score: isiSum, max: 28, answered: isiCount, total: 7, interp: isiInterp, cls: isiClass });
+
+    // ESS
+    let essSum = 0, essCount = 0;
+    for (let i = 1; i <= 8; i++) {
+        const v = getRadioValue(`ess_${i}`);
+        if (v !== null) { essSum += v; essCount++; }
+    }
+    let essInterp = '', essClass = '';
+    if (essCount === 8) {
+        if (essSum < 11) { essInterp = '정상 범위 (0-10)'; essClass = 'result-normal'; }
+        else { essInterp = '과도한 주간졸림 (≥11)'; essClass = 'result-severe'; }
+    }
+    results.push({ title: '엡워스 졸음 척도 (ESS)', score: essSum, max: 24, answered: essCount, total: 8, interp: essInterp, cls: essClass });
+
+    // STOP-Bang
+    let stopSum = 0, stopCount = 0;
+    ['s','t','o','p','b','a','n','g'].forEach(c => {
+        const v = getRadioValue(`stop_${c}`);
+        if (v !== null) { stopSum += v; stopCount++; }
+    });
+    let stopInterp = '', stopClass = '', stopReason = '';
+    if (stopCount === 8) {
+        // STOP (처음 4개) 합산
+        let stopFront = (getRadioValue('stop_s') || 0) + (getRadioValue('stop_t') || 0) + (getRadioValue('stop_o') || 0) + (getRadioValue('stop_p') || 0);
+        let isMale = (getRadioValue('stop_g') === 1);
+        let highBMI = (getRadioValue('stop_b') === 1);
+        let bigNeck = (getRadioValue('stop_n') === 1);
+
+        // 고위험 조건 판별 + 이유
+        let highReasons = [];
+        if (stopSum >= 5) highReasons.push(`총 ${stopSum}개 "예" (≥5개)`);
+        if (stopFront >= 2 && isMale) highReasons.push(`STOP ${stopFront}개 "예" + 남성`);
+        if (stopFront >= 2 && highBMI) highReasons.push(`STOP ${stopFront}개 "예" + BMI≥30`);
+        if (stopFront >= 2 && bigNeck) highReasons.push(`STOP ${stopFront}개 "예" + 목둘레 큼`);
+
+        let isHighRisk = highReasons.length > 0;
+
+        if (isHighRisk) {
+            stopInterp = '고위험';
+            stopClass = 'result-severe';
+            stopReason = '판정 근거: ' + highReasons.join(' / ');
+        } else if (stopSum >= 3) {
+            stopInterp = '중간 위험';
+            stopClass = 'result-moderate';
+            stopReason = `판정 근거: 총 ${stopSum}개 "예" (3~4개)`;
+        } else {
+            stopInterp = '저위험';
+            stopClass = 'result-normal';
+            stopReason = `판정 근거: 총 ${stopSum}개 "예" (0~2개)`;
+        }
+    }
+    results.push({ title: 'STOP-Bang (수면무호흡 위험도)', score: stopSum, max: 8, answered: stopCount, total: 8, interp: stopInterp, cls: stopClass, extra: stopReason });
+
+    // RLS
+    let rlsSum = 0, rlsCount = 0;
+    for (let i = 1; i <= 4; i++) {
+        const v = getRadioValue(`rls_${i}`);
+        if (v !== null) { rlsSum += v; rlsCount++; }
+    }
+    let rlsInterp = '', rlsClass = '';
+    if (rlsCount === 4) {
+        if (rlsSum === 4) { rlsInterp = '하지불안증후군 진단기준 충족 (4/4 충족)'; rlsClass = 'result-severe'; }
+        else { rlsInterp = `진단기준 미충족 (${rlsSum}/4 충족)`; rlsClass = 'result-normal'; }
+    }
+    results.push({ title: '하지불안증후군 (RLS)', score: rlsSum, max: 4, answered: rlsCount, total: 4, interp: rlsInterp, cls: rlsClass, unit: '개 충족' });
+
+    return results;
+}
+
+function getScale2Results() {
+    let rlsAllYes = true;
+    for (let i = 1; i <= 4; i++) {
+        if (getRadioValue(`rls_${i}`) !== 1) { rlsAllYes = false; break; }
+    }
+
+    let results = [];
+
+    // PSQI-K scoring (now section 1)
+    let psqiResults = calculatePSQI();
+    results.push(psqiResults);
+
+    // DBAS (now section 2)
+    let dbasSum = 0, dbasCount = 0;
+    for (let i = 1; i <= 16; i++) {
+        const v = getRadioValue(`dbas_${i}`);
+        if (v !== null) { dbasSum += v; dbasCount++; }
+    }
+    let dbasAvg = dbasCount > 0 ? (dbasSum / dbasCount).toFixed(1) : 0;
+    let dbasInterp = '', dbasClass = '';
+    if (dbasCount === 16) {
+        if (dbasAvg <= 3.5) { dbasInterp = '정상 범위'; dbasClass = 'result-normal'; }
+        else if (dbasAvg <= 5.5) { dbasInterp = '경도 역기능적 신념'; dbasClass = 'result-mild'; }
+        else if (dbasAvg <= 7.5) { dbasInterp = '중등도 역기능적 신념'; dbasClass = 'result-moderate'; }
+        else { dbasInterp = '심한 역기능적 신념'; dbasClass = 'result-severe'; }
+    }
+    results.push({ title: '역기능적 신념 및 태도 (DBAS-16)', score: dbasSum, max: 160, answered: dbasCount, total: 16, interp: dbasInterp, cls: dbasClass });
+
+    // K-IRLS (now section 3)
+    if (rlsAllYes) {
+        let irlsSum = 0, irlsCount = 0;
+        for (let i = 1; i <= 10; i++) {
+            const v = getRadioValue(`irls_${i}`);
+            if (v !== null) { irlsSum += v; irlsCount++; }
+        }
+        let irlsInterp = '', irlsClass = '';
+        if (irlsCount === 10) {
+            if (irlsSum === 0) { irlsInterp = '증상 없음 (0)'; irlsClass = 'result-normal'; }
+            else if (irlsSum <= 10) { irlsInterp = '경도 (1-10)'; irlsClass = 'result-mild'; }
+            else if (irlsSum <= 20) { irlsInterp = '중등도 (11-20)'; irlsClass = 'result-moderate'; }
+            else if (irlsSum <= 30) { irlsInterp = '중증 (21-30)'; irlsClass = 'result-severe'; }
+            else { irlsInterp = '최중증 (31-40)'; irlsClass = 'result-severe'; }
+        }
+        results.push({ title: '국제하지불안척도 (K-IRLS)', score: irlsSum, max: 40, answered: irlsCount, total: 10, interp: irlsInterp, cls: irlsClass });
+    } else {
+        results.push({ title: '국제하지불안척도 (K-IRLS)', score: '-', max: 40, answered: '-', total: 10, interp: '해당없음 (RLS 진단기준 미충족)', cls: 'result-normal' });
+    }
+
+    return results;
+}
+
+function calculatePSQI() {
+    // Component 1: Subjective sleep quality (Q6)
+    let c1 = getRadioValue('psqi_6') || 0;
+
+    // Component 2: Sleep latency (Q2 + Q5a)
+    let latencyMin = (parseInt(document.getElementById('psqi_2_hour').value) || 0) * 60 + (parseInt(document.getElementById('psqi_2_min').value) || 0);
+    let latencyScore = 0;
+    if (latencyMin <= 15) latencyScore = 0;
+    else if (latencyMin <= 30) latencyScore = 1;
+    else if (latencyMin <= 60) latencyScore = 2;
+    else latencyScore = 3;
+    let q5a = getRadioValue('psqi5_a') || 0;
+    let c2sum = latencyScore + q5a;
+    let c2 = 0;
+    if (c2sum === 0) c2 = 0;
+    else if (c2sum <= 2) c2 = 1;
+    else if (c2sum <= 4) c2 = 2;
+    else c2 = 3;
+
+    // Component 3: Sleep duration (Q4)
+    let sleepHours = (parseInt(document.getElementById('psqi_4_hour').value) || 0) + (parseInt(document.getElementById('psqi_4_min').value) || 0) / 60;
+    let c3 = 0;
+    if (sleepHours > 7) c3 = 0;
+    else if (sleepHours >= 6) c3 = 1;
+    else if (sleepHours >= 5) c3 = 2;
+    else c3 = 3;
+
+    // Component 4: Habitual sleep efficiency
+    let bedHour = parseInt(document.getElementById('psqi_1_hour').value) || 0;
+    let bedMin = parseInt(document.getElementById('psqi_1_min').value) || 0;
+    let bedAmPm = document.getElementById('psqi_1_ampm').value;
+    let wakeHour = parseInt(document.getElementById('psqi_3_hour').value) || 0;
+    let wakeMin = parseInt(document.getElementById('psqi_3_min').value) || 0;
+    let wakeAmPm = document.getElementById('psqi_3_ampm').value;
+
+    let bedTime24 = bedHour;
+    if (bedAmPm === 'pm' && bedHour !== 12) bedTime24 += 12;
+    if (bedAmPm === 'am' && bedHour === 12) bedTime24 = 0;
+    let bedTimeMinutes = bedTime24 * 60 + bedMin;
+
+    let wakeTime24 = wakeHour;
+    if (wakeAmPm === 'pm' && wakeHour !== 12) wakeTime24 += 12;
+    if (wakeAmPm === 'am' && wakeHour === 12) wakeTime24 = 0;
+    let wakeTimeMinutes = wakeTime24 * 60 + wakeMin;
+
+    let timeInBed = wakeTimeMinutes - bedTimeMinutes;
+    if (timeInBed <= 0) timeInBed += 1440;
+    let timeInBedHours = timeInBed / 60;
+
+    let se = timeInBedHours > 0 ? (sleepHours / timeInBedHours) * 100 : 0;
+    let c4 = 0;
+    if (se >= 85) c4 = 0;
+    else if (se >= 75) c4 = 1;
+    else if (se >= 65) c4 = 2;
+    else c4 = 3;
+
+    // Component 5: Sleep disturbances (Q5b-Q5i + Q5j)
+    let c5sum = 0;
+    ['b','c','d','e','f','g','h','i'].forEach(c => {
+        c5sum += getRadioValue(`psqi5_${c}`) || 0;
+    });
+    c5sum += getRadioValue('psqi5_j') || 0;
+    let c5 = 0;
+    if (c5sum === 0) c5 = 0;
+    else if (c5sum <= 9) c5 = 1;
+    else if (c5sum <= 18) c5 = 2;
+    else c5 = 3;
+
+    // Component 6: Use of sleeping medication (Q7)
+    let c6 = getRadioValue('psqi_7') || 0;
+
+    // Component 7: Daytime dysfunction (Q8 + Q9)
+    let q8 = getRadioValue('psqi_8') || 0;
+    let q9 = getRadioValue('psqi_9') || 0;
+    let c7sum = q8 + q9;
+    let c7 = 0;
+    if (c7sum === 0) c7 = 0;
+    else if (c7sum <= 2) c7 = 1;
+    else if (c7sum <= 4) c7 = 2;
+    else c7 = 3;
+
+    let globalPSQI = c1 + c2 + c3 + c4 + c5 + c6 + c7;
+    let psqiInterp = '', psqiClass = '';
+    if (globalPSQI < 5) { psqiInterp = '좋은 수면의 질 (0-4)'; psqiClass = 'result-normal'; }
+    else if (globalPSQI <= 10) { psqiInterp = '나쁜 수면의 질 (5-10)'; psqiClass = 'result-moderate'; }
+    else { psqiInterp = '매우 나쁜 수면의 질 (11-21)'; psqiClass = 'result-severe'; }
+
+    return {
+        title: '피처버그 수면의 질 (PSQI-K)',
+        score: globalPSQI,
+        max: 21,
+        answered: '-',
+        total: '-',
+        interp: psqiInterp,
+        cls: psqiClass,
+        components: `C1(수면질):${c1} | C2(수면잠복기):${c2} | C3(수면시간):${c3} | C4(수면효율):${c4} | C5(수면장애):${c5} | C6(수면약물):${c6} | C7(주간기능장애):${c7}`,
+        extra: `수면효율: ${se.toFixed(1)}% | 총 수면시간: ${sleepHours.toFixed(1)}시간`
+    };
+}
+
+function displayResults(results) {
+    const container = document.getElementById('results_container');
+    const patientId = document.getElementById('patient_id').value || '-';
+    const patientName = document.getElementById('patient_name').value || '-';
+    const evalDate = document.getElementById('eval_date').value || '-';
+
+    document.getElementById('result_patient_info').innerHTML =
+        `등록번호: <strong>${patientId}</strong> | 성명: <strong>${patientName}</strong> | 평가일: ${evalDate}`;
+
+    let html = '';
+    // Scale I 결과 (처음 4개)
+    html += `<h3 style="margin:20px 0 15px;color:#1e3a5f;border-left:4px solid #1e3a5f;padding-left:12px">Scale I 결과</h3>`;
+    results.slice(0, 4).forEach(r => { html += renderResultBox(r); });
+
+    // Scale II 결과 (나머지)
+    html += `<h3 style="margin:20px 0 15px;color:#1e3a5f;border-left:4px solid #1e3a5f;padding-left:12px">Scale II 결과</h3>`;
+    results.slice(4).forEach(r => { html += renderResultBox(r); });
+
+    container.innerHTML = html;
+    // Mark results as displayed for change warning
+    if (window._setResultsDisplayed) window._setResultsDisplayed();
+    if (window._removeInfoWarning) window._removeInfoWarning();
+    switchTab('results');
+}
+
+function recalculateResults() {
+    let results = [];
+    results.push(...getScale1Results());
+    results.push(...getScale2Results());
+    displayResults(results);
+}
+
+function renderResultBox(r) {
+    let html = `<div class="result-box">
+        <div class="result-title">${r.title}</div>
+        <div class="result-score">${r.score} <span style="font-size:0.5em;color:#64748b">/ ${r.max}</span></div>`;
+    if (r.unit) html += `<div style="font-size:0.9em;color:#64748b">${r.unit}${r.sum ? ' (합계: ' + r.sum + ')' : ''}</div>`;
+    if (r.answered !== '-') html += `<div style="font-size:0.85em;color:#94a3b8">응답: ${r.answered}/${r.total} 문항</div>`;
+    if (r.components) html += `<div style="font-size:0.85em;color:#475569;margin-top:8px;padding:8px;background:#f8fafc;border-radius:6px">${r.components}</div>`;
+    if (r.extra) html += `<div style="font-size:0.85em;color:#475569;margin-top:4px;padding:8px;background:#f8fafc;border-radius:6px">${r.extra}</div>`;
+    if (r.interp) html += `<div class="result-interp ${r.cls}">${r.interp}</div>`;
+    html += `</div>`;
+    return html;
+}
+
+function exportToExcel() {
+    const container = document.getElementById('results_container');
+    if (!container.innerHTML) { alert('먼저 결과보기를 실행해주세요.'); return; }
+
+    const name = document.getElementById('patient_name').value || '환자';
+    const id = document.getElementById('patient_id').value || '';
+    const date = document.getElementById('eval_date').value || '';
+    const gender = document.getElementById('patient_gender').value || '';
+    const age = document.getElementById('patient_age').value || '';
+    const bmi = document.getElementById('patient_bmi').value || '';
+
+    const scale1 = getScale1Results();
+    const scale2 = getScale2Results();
+
+    let rows = [];
+    rows.push(['DSMC Sleep Scale 결과']);
+    rows.push([]);
+    rows.push(['환자정보']);
+    rows.push(['등록번호', id]);
+    rows.push(['성명', name]);
+    rows.push(['성별', gender]);
+    rows.push(['나이', age]);
+    rows.push(['BMI', bmi]);
+    rows.push(['검사일', date]);
+    rows.push([]);
+    rows.push(['Scale I 결과']);
+    rows.push(['검사항목', '점수', '만점', '해석']);
+    scale1.forEach(r => {
+        let row = [r.title, r.score, r.max, r.interp];
+        if (r.extra) row.push(r.extra);
+        rows.push(row);
+    });
+    rows.push([]);
+    rows.push(['Scale II 결과']);
+    rows.push(['검사항목', '점수', '만점', '해석']);
+    scale2.forEach(r => {
+        rows.push([r.title, r.score, r.max, r.interp]);
+    });
+
+    const csvContent = '﻿' + rows.map(row =>
+        row.map(cell => {
+            const s = String(cell == null ? '' : cell);
+            return s.includes(',') || s.includes('"') || s.includes('\n')
+                ? '"' + s.replace(/"/g, '""') + '"' : s;
+        }).join(',')
+    ).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Sleep_Scale_${name}_${date || 'result'}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function fillTestData() {
+    if (!confirm('모든 문항에 랜덤 데이터를 입력합니다. 기존 응답이 덮어씌워집니다. 계속하시겠습니까?')) return;
+
+    // 기본정보
+    document.getElementById('patient_id').value = 'TEST-' + Math.floor(Math.random()*9000+1000);
+    document.getElementById('patient_name').value = '테스트환자';
+    document.getElementById('patient_birth').value = `${1950 + Math.floor(Math.random()*50)}-${String(Math.floor(Math.random()*12)+1).padStart(2,'0')}-${String(Math.floor(Math.random()*28)+1).padStart(2,'0')}`;
+    document.getElementById('patient_birth').dispatchEvent(new Event('input'));
+    document.getElementById('patient_gender').value = Math.random() > 0.5 ? '남' : '여';
+    document.getElementById('patient_gender').dispatchEvent(new Event('change'));
+    document.getElementById('patient_height').value = Math.floor(Math.random()*30 + 155);
+    document.getElementById('patient_weight').value = Math.floor(Math.random()*40 + 50);
+    document.getElementById('patient_height').dispatchEvent(new Event('input'));
+    document.getElementById('patient_neck').value = Math.floor(Math.random()*10 + 35);
+    document.getElementById('patient_neck').dispatchEvent(new Event('input'));
+
+    // 모든 라디오 버튼 그룹에 랜덤 선택
+    const radioGroups = {};
+    document.querySelectorAll('input[type="radio"]:not([disabled])').forEach(r => {
+        if (!radioGroups[r.name]) radioGroups[r.name] = [];
+        radioGroups[r.name].push(r);
+    });
+    Object.values(radioGroups).forEach(group => {
+        const pick = group[Math.floor(Math.random() * group.length)];
+        pick.checked = true;
+        pick.dispatchEvent(new Event('change', {bubbles:true}));
+    });
+
+    // PSQI 시간 입력
+    document.getElementById('psqi_1_hour').value = Math.floor(Math.random()*4 + 9);
+    document.getElementById('psqi_1_min').value = Math.floor(Math.random()*60);
+    document.getElementById('psqi_2_hour').value = Math.floor(Math.random()*2);
+    document.getElementById('psqi_2_min').value = Math.floor(Math.random()*60);
+    document.getElementById('psqi_3_hour').value = Math.floor(Math.random()*4 + 5);
+    document.getElementById('psqi_3_min').value = Math.floor(Math.random()*60);
+    document.getElementById('psqi_4_hour').value = Math.floor(Math.random()*4 + 4);
+    document.getElementById('psqi_4_min').value = Math.floor(Math.random()*60);
+
+    // DBAS 랜덤 (1-10 scale options)
+    for (let i = 1; i <= 16; i++) {
+        const val = Math.floor(Math.random()*10) + 1;
+        const el = document.querySelector(`input[name="dbas_${i}"][value="${val}"]`);
+        if (el) el.checked = true;
+    }
+
+    alert('랜덤 데이터 입력 완료! Scale I → Scale II 순서로 확인 후 결과보기를 눌러주세요.');
+    switchTab('scale1');
+}
+</script>
+</body>
+</html>

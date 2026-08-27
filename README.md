@@ -6,7 +6,9 @@
 
 `sleep_scale.html` 파일을 브라우저에서 열면 바로 사용 가능합니다.
 
-**온라인 접속:** https://kzy0023.github.io/DSMC-SLEEP-SCALE/sleep_scale.html
+**온라인 접속:**
+- [배포용 (테스터모드 제외)](https://kzy0023.github.io/DSMC-SLEEP-SCALE/sleep_scale_release.html)
+- [개발용 (테스터모드 포함)](https://kzy0023.github.io/DSMC-SLEEP-SCALE/sleep_scale.html)
 
 ## 포함된 검사 도구
 

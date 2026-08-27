@@ -1895,7 +1895,6 @@ function sendResultsByEmail() {
     const id = document.getElementById('patient_id').value || '';
     const date = document.getElementById('eval_date').value || '';
 
-    // CSV 데이터 생성
     const scale1 = getScale1Results();
     const scale2 = getScale2Results();
     const gender = document.getElementById('patient_gender').value || '';
@@ -1920,32 +1919,100 @@ function sendResultsByEmail() {
         const s = String(v == null ? '' : v);
         return s.includes(',') || s.includes('"') ? '"'+s.replace(/"/g,'""')+'"' : s;
     }).join(',');
-    const csvContent = headers.join(',') + '\n' + csvRow;
+    const csvContent = '﻿' + headers.join(',') + '\n' + csvRow;
+    const csvBase64 = btoa(unescape(encodeURIComponent(csvContent)));
 
-    // 상세 결과 HTML
-    const resultsHtml = document.getElementById('results_container').innerHTML;
+    const infoBox = document.querySelector('#results .info-box');
+    const pdfHtml = `<html><head><meta charset="UTF-8"><style>
+        body{font-family:sans-serif;font-size:11px;padding:15px}
+        .result-box{border:1px solid #ddd;padding:8px;margin:5px 0;border-radius:6px}
+        .result-title{font-weight:bold;color:#1e3a5f}
+        .result-normal{background:#dcfce7;color:#166534;padding:3px 8px;border-radius:4px;display:inline-block}
+        .result-mild{background:#fef9c3;color:#854d0e;padding:3px 8px;border-radius:4px;display:inline-block}
+        .result-moderate{background:#fed7aa;color:#9a3412;padding:3px 8px;border-radius:4px;display:inline-block}
+        .result-severe{background:#fecaca;color:#991b1b;padding:3px 8px;border-radius:4px;display:inline-block}
+        table{border-collapse:collapse;width:100%;font-size:10px}
+        th,td{border:1px solid #ddd;padding:3px 5px}
+        th{background:#1e3a5f;color:white}
+        h2{color:#1e3a5f;text-align:center}
+        h3{color:#1e3a5f;border-left:3px solid #1e3a5f;padding-left:8px;margin:10px 0 5px}
+    </style></head><body>
+        <h2>DSMC SLEEP SCALE 상세결과</h2>
+        <p style="text-align:center;color:#666">계명대학교 동산병원 신경과 수면센터</p>
+        <hr>
+        ${infoBox ? infoBox.innerHTML : ''}
+        <h3>검사 결과</h3>
+        ${document.getElementById('results_container').innerHTML}
+        <h3>기본정보</h3>
+        ${getInfoResponses()}
+        <h3>Scale I 응답</h3>
+        ${getScaleResponses('scale1')}
+        <h3>Scale II 응답</h3>
+        ${getScaleResponses('scale2')}
+    </body></html>`;
+    const pdfBase64 = btoa(unescape(encodeURIComponent(pdfHtml)));
 
-    // EmailJS 전송
-    if (typeof emailjs === 'undefined') {
-        console.error('EmailJS not loaded');
-        return;
+    function interpStyle(cls) {
+        const styles = {
+            'result-normal': 'background:#dcfce7;color:#166534',
+            'result-mild': 'background:#fef9c3;color:#854d0e',
+            'result-moderate': 'background:#fed7aa;color:#9a3412',
+            'result-severe': 'background:#fecaca;color:#991b1b'
+        };
+        return styles[cls] || 'background:#f1f5f9;color:#334155';
     }
+
+    let resultsHtml = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">';
+    resultsHtml += '<h2 style="color:#1e3a5f;text-align:center;margin-bottom:5px">DSMC SLEEP SCALE 검사결과</h2>';
+    resultsHtml += '<p style="text-align:center;color:#666;margin-top:0">계명대학교 동산병원 신경과 수면센터</p>';
+    resultsHtml += '<table style="border-collapse:collapse;width:100%;margin-bottom:15px;font-size:13px"><tr>';
+    resultsHtml += `<td style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;font-weight:bold">성명</td>`;
+    resultsHtml += `<td style="border:1px solid #ddd;padding:6px">${name}</td>`;
+    resultsHtml += `<td style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;font-weight:bold">등록번호</td>`;
+    resultsHtml += `<td style="border:1px solid #ddd;padding:6px">${id}</td>`;
+    resultsHtml += `<td style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;font-weight:bold">검사일</td>`;
+    resultsHtml += `<td style="border:1px solid #ddd;padding:6px">${date}</td>`;
+    resultsHtml += '</tr></table>';
+
+    resultsHtml += '<h3 style="color:#1e3a5f;border-left:4px solid #1e3a5f;padding-left:8px;margin:15px 0 8px">Scale I</h3>';
+    resultsHtml += '<table style="border-collapse:collapse;width:100%;font-size:13px">';
+    resultsHtml += '<tr><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:left">검사</th><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:center">점수</th><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:left">해석</th></tr>';
+    scale1.forEach(r => {
+        resultsHtml += `<tr><td style="border:1px solid #ddd;padding:6px;font-weight:bold">${r.title}</td>`;
+        resultsHtml += `<td style="border:1px solid #ddd;padding:6px;text-align:center;font-weight:bold;color:#1e3a5f">${r.score}/${r.max}</td>`;
+        resultsHtml += `<td style="border:1px solid #ddd;padding:6px"><span style="padding:2px 8px;border-radius:4px;${interpStyle(r.cls)}">${r.interp}</span></td></tr>`;
+        if (r.extra) resultsHtml += `<tr><td colspan="3" style="border:1px solid #ddd;padding:4px 6px;font-size:12px;color:#475569;background:#f8fafc">${r.extra}</td></tr>`;
+    });
+    resultsHtml += '</table>';
+
+    resultsHtml += '<h3 style="color:#1e3a5f;border-left:4px solid #1e3a5f;padding-left:8px;margin:15px 0 8px">Scale II</h3>';
+    resultsHtml += '<table style="border-collapse:collapse;width:100%;font-size:13px">';
+    resultsHtml += '<tr><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:left">검사</th><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:center">점수</th><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:left">해석</th></tr>';
+    scale2.forEach(r => {
+        resultsHtml += `<tr><td style="border:1px solid #ddd;padding:6px;font-weight:bold">${r.title}</td>`;
+        resultsHtml += `<td style="border:1px solid #ddd;padding:6px;text-align:center;font-weight:bold;color:#1e3a5f">${r.score}/${r.max}</td>`;
+        resultsHtml += `<td style="border:1px solid #ddd;padding:6px"><span style="padding:2px 8px;border-radius:4px;${interpStyle(r.cls)}">${r.interp}</span></td></tr>`;
+        if (r.components) resultsHtml += `<tr><td colspan="3" style="border:1px solid #ddd;padding:4px 6px;font-size:12px;color:#475569;background:#f8fafc">${r.components}</td></tr>`;
+        if (r.extra) resultsHtml += `<tr><td colspan="3" style="border:1px solid #ddd;padding:4px 6px;font-size:12px;color:#475569;background:#f8fafc">${r.extra}</td></tr>`;
+    });
+    resultsHtml += '</table>';
+    resultsHtml += '<hr style="margin-top:20px;border:none;border-top:1px solid #ddd">';
+    resultsHtml += '<p style="font-size:11px;color:#999;text-align:center">본 메일은 자동 발송되었습니다.</p>';
+    resultsHtml += '</div>';
+
+    if (typeof emailjs === 'undefined') { console.error('EmailJS not loaded'); return; }
     emailjs.send('service_0i8loiq', 'template_3x4sqpi', {
         to_email: 'nepsy@dsmc.or.kr',
         patient_name: name,
         patient_id: id,
         eval_date: date,
-        csv_data: csvContent,
         results_html: resultsHtml,
-        info_responses: getInfoResponses(),
-        scale1_responses: getScaleResponses('scale1'),
-        scale2_responses: getScaleResponses('scale2')
+        csv_data: csvContent
     }).then(
         () => console.log('결과 전송 완료'),
         (err) => console.error('전송 실패:', err)
     );
 }
-
 
 function recalculateResults() {
     let results = [];

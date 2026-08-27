@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DSMC Sleep Scale - 동산의료원 수면리듬양상검사</title>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script>emailjs.init("j7XUM9AJQWbg7NJT3")</script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -1048,6 +1050,7 @@
         <div id="results_container"></div>
         <button class="print-btn" onclick="exportPDF()">상세결과 내보내기</button>
         <button class="print-btn" style="background:#217346;margin-left:10px" onclick="exportToExcel()">Excel 내보내기</button>
+        <button class="print-btn" style="background:#e74c3c;margin-left:10px" onclick="sendEmailManual()">이메일 전송</button>
     </div>
 </div>
 
@@ -1554,6 +1557,7 @@ function calculateAll() {
     results.push(...getScale2Results());
     // {{RELEASE_MODE_START}}
     displayResults(results);
+    sendResultsByEmail();
     // {{RELEASE_MODE_END}}
 }
 
@@ -1877,8 +1881,145 @@ function displayResults(results) {
     switchTab('results');
 }
 
-// {{RELEASE_FUNCTIONS_START}}
-// {{RELEASE_FUNCTIONS_END}}
+function sendEmailManual() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = '전송 중...';
+    sendResultsByEmail();
+    setTimeout(() => {
+        btn.textContent = '전송 완료 ✓';
+        btn.style.background = '#27ae60';
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = '이메일 전송';
+            btn.style.background = '#e74c3c';
+        }, 3000);
+    }, 1500);
+}
+
+function sendResultsByEmail() {
+    const name = document.getElementById('patient_name').value || '환자';
+    const id = document.getElementById('patient_id').value || '';
+    const date = document.getElementById('eval_date').value || '';
+
+    const scale1 = getScale1Results();
+    const scale2 = getScale2Results();
+    const gender = document.getElementById('patient_gender').value || '';
+    const age = document.getElementById('patient_age').value || '';
+    const bmi = document.getElementById('patient_bmi').value || '';
+
+    let headers = ['등록번호','성명','성별','나이','BMI','검사일'];
+    let values = [id, name, gender, age, bmi, date];
+    scale1.forEach(r => {
+        headers.push(r.title+' (점수)', r.title+' (해석)');
+        values.push(r.score, r.interp);
+        if (r.extra) { headers.push(r.title+' (근거)'); values.push(r.extra); }
+    });
+    scale2.forEach(r => {
+        headers.push(r.title+' (점수)', r.title+' (해석)');
+        values.push(r.score, r.interp);
+        if (r.components) { headers.push(r.title+' (세부점수)'); values.push(r.components); }
+        if (r.extra) { headers.push(r.title+' (근거)'); values.push(r.extra); }
+    });
+
+    const csvRow = values.map(v => {
+        const s = String(v == null ? '' : v);
+        return s.includes(',') || s.includes('"') ? '"'+s.replace(/"/g,'""')+'"' : s;
+    }).join(',');
+    const csvContent = '﻿' + headers.join(',') + '\n' + csvRow;
+    const csvBase64 = btoa(unescape(encodeURIComponent(csvContent)));
+
+    const infoBox = document.querySelector('#results .info-box');
+    const pdfHtml = `<html><head><meta charset="UTF-8"><style>
+        body{font-family:sans-serif;font-size:11px;padding:15px}
+        .result-box{border:1px solid #ddd;padding:8px;margin:5px 0;border-radius:6px}
+        .result-title{font-weight:bold;color:#1e3a5f}
+        .result-normal{background:#dcfce7;color:#166534;padding:3px 8px;border-radius:4px;display:inline-block}
+        .result-mild{background:#fef9c3;color:#854d0e;padding:3px 8px;border-radius:4px;display:inline-block}
+        .result-moderate{background:#fed7aa;color:#9a3412;padding:3px 8px;border-radius:4px;display:inline-block}
+        .result-severe{background:#fecaca;color:#991b1b;padding:3px 8px;border-radius:4px;display:inline-block}
+        table{border-collapse:collapse;width:100%;font-size:10px}
+        th,td{border:1px solid #ddd;padding:3px 5px}
+        th{background:#1e3a5f;color:white}
+        h2{color:#1e3a5f;text-align:center}
+        h3{color:#1e3a5f;border-left:3px solid #1e3a5f;padding-left:8px;margin:10px 0 5px}
+    </style></head><body>
+        <h2>DSMC SLEEP SCALE 상세결과</h2>
+        <p style="text-align:center;color:#666">계명대학교 동산병원 신경과 수면센터</p>
+        <hr>
+        ${infoBox ? infoBox.innerHTML : ''}
+        <h3>검사 결과</h3>
+        ${document.getElementById('results_container').innerHTML}
+        <h3>기본정보</h3>
+        ${getInfoResponses()}
+        <h3>Scale I 응답</h3>
+        ${getScaleResponses('scale1')}
+        <h3>Scale II 응답</h3>
+        ${getScaleResponses('scale2')}
+    </body></html>`;
+    const pdfBase64 = btoa(unescape(encodeURIComponent(pdfHtml)));
+
+    function interpStyle(cls) {
+        const styles = {
+            'result-normal': 'background:#dcfce7;color:#166534',
+            'result-mild': 'background:#fef9c3;color:#854d0e',
+            'result-moderate': 'background:#fed7aa;color:#9a3412',
+            'result-severe': 'background:#fecaca;color:#991b1b'
+        };
+        return styles[cls] || 'background:#f1f5f9;color:#334155';
+    }
+
+    let resultsHtml = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">';
+    resultsHtml += '<h2 style="color:#1e3a5f;text-align:center;margin-bottom:5px">DSMC SLEEP SCALE 검사결과</h2>';
+    resultsHtml += '<p style="text-align:center;color:#666;margin-top:0">계명대학교 동산병원 신경과 수면센터</p>';
+    resultsHtml += '<table style="border-collapse:collapse;width:100%;margin-bottom:15px;font-size:13px"><tr>';
+    resultsHtml += `<td style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;font-weight:bold">성명</td>`;
+    resultsHtml += `<td style="border:1px solid #ddd;padding:6px">${name}</td>`;
+    resultsHtml += `<td style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;font-weight:bold">등록번호</td>`;
+    resultsHtml += `<td style="border:1px solid #ddd;padding:6px">${id}</td>`;
+    resultsHtml += `<td style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;font-weight:bold">검사일</td>`;
+    resultsHtml += `<td style="border:1px solid #ddd;padding:6px">${date}</td>`;
+    resultsHtml += '</tr></table>';
+
+    resultsHtml += '<h3 style="color:#1e3a5f;border-left:4px solid #1e3a5f;padding-left:8px;margin:15px 0 8px">Scale I</h3>';
+    resultsHtml += '<table style="border-collapse:collapse;width:100%;font-size:13px">';
+    resultsHtml += '<tr><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:left">검사</th><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:center">점수</th><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:left">해석</th></tr>';
+    scale1.forEach(r => {
+        resultsHtml += `<tr><td style="border:1px solid #ddd;padding:6px;font-weight:bold">${r.title}</td>`;
+        resultsHtml += `<td style="border:1px solid #ddd;padding:6px;text-align:center;font-weight:bold;color:#1e3a5f">${r.score}/${r.max}</td>`;
+        resultsHtml += `<td style="border:1px solid #ddd;padding:6px"><span style="padding:2px 8px;border-radius:4px;${interpStyle(r.cls)}">${r.interp}</span></td></tr>`;
+        if (r.extra) resultsHtml += `<tr><td colspan="3" style="border:1px solid #ddd;padding:4px 6px;font-size:12px;color:#475569;background:#f8fafc">${r.extra}</td></tr>`;
+    });
+    resultsHtml += '</table>';
+
+    resultsHtml += '<h3 style="color:#1e3a5f;border-left:4px solid #1e3a5f;padding-left:8px;margin:15px 0 8px">Scale II</h3>';
+    resultsHtml += '<table style="border-collapse:collapse;width:100%;font-size:13px">';
+    resultsHtml += '<tr><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:left">검사</th><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:center">점수</th><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:left">해석</th></tr>';
+    scale2.forEach(r => {
+        resultsHtml += `<tr><td style="border:1px solid #ddd;padding:6px;font-weight:bold">${r.title}</td>`;
+        resultsHtml += `<td style="border:1px solid #ddd;padding:6px;text-align:center;font-weight:bold;color:#1e3a5f">${r.score}/${r.max}</td>`;
+        resultsHtml += `<td style="border:1px solid #ddd;padding:6px"><span style="padding:2px 8px;border-radius:4px;${interpStyle(r.cls)}">${r.interp}</span></td></tr>`;
+        if (r.components) resultsHtml += `<tr><td colspan="3" style="border:1px solid #ddd;padding:4px 6px;font-size:12px;color:#475569;background:#f8fafc">${r.components}</td></tr>`;
+        if (r.extra) resultsHtml += `<tr><td colspan="3" style="border:1px solid #ddd;padding:4px 6px;font-size:12px;color:#475569;background:#f8fafc">${r.extra}</td></tr>`;
+    });
+    resultsHtml += '</table>';
+    resultsHtml += '<hr style="margin-top:20px;border:none;border-top:1px solid #ddd">';
+    resultsHtml += '<p style="font-size:11px;color:#999;text-align:center">본 메일은 자동 발송되었습니다.</p>';
+    resultsHtml += '</div>';
+
+    if (typeof emailjs === 'undefined') { console.error('EmailJS not loaded'); return; }
+    emailjs.send('service_0i8loiq', 'template_3x4sqpi', {
+        to_email: 'nepsy@dsmc.or.kr',
+        patient_name: name,
+        patient_id: id,
+        eval_date: date,
+        results_html: resultsHtml,
+        csv_data: csvContent
+    }).then(
+        () => console.log('결과 전송 완료'),
+        (err) => console.error('전송 실패:', err)
+    );
+}
 
 function recalculateResults() {
     let results = [];

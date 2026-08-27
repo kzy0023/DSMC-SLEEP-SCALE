@@ -1922,12 +1922,22 @@ function exportToExcel() {
     ).join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Sleep_Scale_${name}_${date || 'result'}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const filename = `Sleep_Scale_${name}_${date || 'result'}.csv`;
+
+    // iOS Safari 호환: Web Share API 또는 새 창 열기
+    if (navigator.share && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        const file = new File([blob], filename, { type: 'text/csv' });
+        navigator.share({ files: [file], title: filename }).catch(() => {});
+    } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
 }
 
 </script>

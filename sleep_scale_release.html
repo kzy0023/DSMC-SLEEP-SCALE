@@ -367,7 +367,7 @@
         <div class="section-title">[인적사항 및 기본정보]</div>
         <div class="patient-info">
             <div><label>직업
-                <select id="patient_job"><option value="">선택</option><option value="유">유 (직업명 기입)</option><option value="무">무</option><option value="생산직">생산직</option><option value="사무직">사무직</option></select>
+                <select id="patient_job"><option value="">선택</option><option value="유">유 (직업명 기입)</option><option value="무">무</option><option value="생산직">생산직</option><option value="사무직">사무직</option><option value="무응답">무응답</option></select>
             </label></div>
             <div><label>직업명 (유인 경우)<input type="text" id="patient_job_name"></label></div>
             <div><label>교대근무
@@ -378,13 +378,13 @@
         <div style="margin-top:15px;padding-top:15px;border-top:1px solid #e2e8f0">
             <div class="patient-info">
                 <div><label>학력
-                    <select id="patient_edu"><option value="">선택</option><option value="초졸미만">초졸미만</option><option value="초졸">초졸</option><option value="중졸">중졸</option><option value="고졸">고졸</option><option value="대졸">대졸</option><option value="대학원이상">대학원 이상</option><option value="기타">기타</option></select>
+                    <select id="patient_edu"><option value="">선택</option><option value="초졸미만">초졸미만</option><option value="초졸">초졸</option><option value="중졸">중졸</option><option value="고졸">고졸</option><option value="대졸">대졸</option><option value="대학원이상">대학원 이상</option><option value="무응답">무응답</option></select>
                 </label></div>
                 <div><label>결혼상태
-                    <select id="patient_marriage"><option value="">선택</option><option value="미혼">미혼</option><option value="기혼">기혼</option><option value="이혼">이혼</option><option value="사별">사별</option><option value="기타">기타</option></select>
+                    <select id="patient_marriage"><option value="">선택</option><option value="미혼">미혼</option><option value="기혼">기혼</option><option value="이혼">이혼</option><option value="사별">사별</option><option value="무응답">무응답</option></select>
                 </label></div>
                 <div><label>세전 연간 가계 수입
-                    <select id="patient_income"><option value="">선택</option><option value="2천만원 미만">2천만원 미만</option><option value="2천-3천만원">2천-3천만원</option><option value="3천-5천만원">3천-5천만원</option><option value="5천-7천만원">5천-7천만원</option><option value="7천만원이상">7천만원이상</option></select>
+                    <select id="patient_income"><option value="">선택</option><option value="2천만원 미만">2천만원 미만</option><option value="2천-3천만원">2천-3천만원</option><option value="3천-5천만원">3천-5천만원</option><option value="5천-7천만원">5천-7천만원</option><option value="7천만원이상">7천만원이상</option><option value="무응답">무응답</option></select>
                 </label></div>
             </div>
         </div>
@@ -454,7 +454,7 @@
         </div>
     </div>
 
-    <button class="submit-btn" onclick="switchTab('scale1')">검사 시작하기 →</button>
+    <button class="submit-btn" onclick="validateInfoAndGo()">검사 시작하기 →</button>
 </div>
 
 <!-- ==================== SCALE I ==================== -->
@@ -1104,7 +1104,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const jobNameInput = document.getElementById('patient_job_name');
     const shiftSelect = document.getElementById('patient_shift');
     function handleJobChange() {
-        const disabled = jobSelect.value === '무';
+        const val = jobSelect.value;
+        const disabled = val === '무' || val === '무응답';
         jobNameInput.disabled = disabled;
         shiftSelect.disabled = disabled;
         if (disabled) { jobNameInput.value = ''; shiftSelect.value = ''; }
@@ -1516,6 +1517,46 @@ function generateDBASItems() {
         </div>`;
     });
     document.getElementById('dbas_items').innerHTML = html;
+}
+
+// === Info validation ===
+function validateInfoAndGo() {
+    const required = [
+        { id: 'patient_id', name: '등록번호' },
+        { id: 'patient_name', name: '성명' },
+        { id: 'eval_date', name: '평가일' },
+        { id: 'patient_birth', name: '생년월일' },
+        { id: 'patient_gender', name: '성별' },
+        { id: 'patient_diagnosis', name: '의심진단' },
+        { id: 'patient_job', name: '직업' },
+        { id: 'patient_shift', name: '교대근무' },
+        { id: 'patient_edu', name: '학력' },
+        { id: 'patient_marriage', name: '결혼상태' },
+        { id: 'patient_income', name: '세전 연간 가계 수입' },
+        { id: 'patient_height', name: '신장' },
+        { id: 'patient_weight', name: '몸무게' },
+        { id: 'patient_neck', name: '목둘레' },
+        { id: 'patient_waist', name: '허리둘레' },
+        { id: 'patient_caffeine', name: '카페인' },
+        { id: 'patient_alcohol', name: '음주' },
+        { id: 'patient_smoke', name: '흡연' },
+        { id: 'patient_exercise', name: '운동' },
+        { id: 'patient_disease', name: '현재 앓고 있는 질환' },
+        { id: 'patient_medicine', name: '현재 복용 중인 약물' },
+        { id: 'patient_hospital_count', name: '수면문제로 방문했던 병원의 수' }
+    ];
+    const missing = [];
+    required.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (!el) return;
+        if (el.disabled) return;
+        if (el.value === undefined || el.value.toString().trim() === '') missing.push(f.name);
+    });
+    if (missing.length > 0) {
+        alert('다음 필수 항목을 입력해주세요:\n\n• ' + missing.join('\n• '));
+        return;
+    }
+    switchTab('scale1');
 }
 
 // === Tab switching ===

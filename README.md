@@ -4,11 +4,9 @@
 
 ## 사용법
 
-`sleep_scale.html` 파일을 브라우저에서 열면 바로 사용 가능합니다.
+`sleep_scale_release.html` 파일을 브라우저에서 열면 바로 사용 가능합니다.
 
-**온라인 접속:**
-- [배포용 (테스터모드 제외)](https://kzy0023.github.io/DSMC-SLEEP-SCALE/sleep_scale_release.html)
-- [개발용 (테스터모드 포함)](https://kzy0023.github.io/DSMC-SLEEP-SCALE/sleep_scale.html)
+**온라인 접속:** https://kzy0023.github.io/DSMC-SLEEP-SCALE/sleep_scale_release.html
 
 ## 포함된 검사 도구
 
@@ -25,22 +23,14 @@
 
 ## 기능
 
+- 기본정보 필수 입력 검증
 - 자동 채점 및 결과 해석
 - 기본정보 → STOP-Bang 자동 반영 (BMI, 나이, 목둘레, 성별)
 - 미응답 항목 검증
-- 결과 인쇄 / Excel 내보내기
-- Tester Mode (랜덤 데이터 입력)
-
-## 개발
-
-코드 수정 시 `src/` 폴더 사용:
-
-```bash
-cd src
-# template.html 수정 후
-python3 build.py
-```
+- 상세결과 PDF 내보내기
+- Excel (CSV) 내보내기
+- 결과 자동 이메일 전송
 
 ## 버전
 
-ver. 2026. JUN
+ver. 2026. AUG

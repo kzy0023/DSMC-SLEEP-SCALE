@@ -6,7 +6,7 @@
 
 `sleep_scale_release.html` 파일을 브라우저에서 열면 바로 사용 가능합니다.
 
-**온라인 접속:** https://kzy0023.github.io/DSMC-SLEEP-SCALE/sleep_scale_release.html?t=1
+**온라인 접속:** https://kzy0023.github.io/DSMC-SLEEP-SCALE/sleep_scale_release.html
 
 ![QR Code](qr_release.png)
 

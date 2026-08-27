@@ -238,9 +238,21 @@
         }
         @media (max-width: 768px) {
             .options { flex-direction: column; }
-            .tab-btn { padding: 12px 20px; font-size: 0.9em; }
-            .section { padding: 20px 15px; }
+            .tab-btn { padding: 12px 15px; font-size: 0.85em; }
+            .section { padding: 15px 12px; }
             .patient-info { grid-template-columns: 1fr; }
+            .patient-info input, .patient-info select {
+                width: 100%;
+                min-width: 0;
+                font-size: 16px;
+            }
+            .time-input { flex-wrap: wrap; }
+            .time-input input { width: 70px; font-size: 16px; }
+            .scale-options label { width: 36px; height: 36px; font-size: 0.85em; }
+            .header { padding: 15px 10px !important; }
+            .header h1 { font-size: 1.1em !important; }
+            .header p { font-size: 0.7em !important; }
+            .header img { height: 35px !important; }
         }
         .print-btn {
             display: inline-block;

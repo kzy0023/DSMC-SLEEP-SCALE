@@ -1852,7 +1852,87 @@ function getScale1Results() {
     }
     results.push({ title: '하지불안증후군 (RLS)', score: rlsSum, max: 4, answered: rlsCount, total: 4, interp: rlsInterp, cls: rlsClass, unit: '개 충족' });
 
+    // SF-36
+    let sf36Result = calculateSF36();
+    if (sf36Result) results.push(sf36Result);
+
     return results;
+}
+
+function calculateSF36() {
+    // Physical Function (PF): Q3a-3j
+    let pfSum = 0;
+    for (let i = 1; i <= 10; i++) { pfSum += getRadioValue(`sf3_${i}`) || 0; }
+    let pf = ((pfSum - 10) / 20) * 100;
+
+    // Role-Physical (RP): Q4a-4d
+    let rpSum = 0;
+    for (let i = 1; i <= 4; i++) { rpSum += getRadioValue(`sf4_${i}`) || 0; }
+    let rp = ((rpSum - 4) / 4) * 100;
+
+    // Body Pain (BP): Q7 + Q8
+    let q7 = getRadioValue('sf_7') || 0;
+    let q8 = getRadioValue('sf_8') || 0;
+    let bp = (((q7 - 1) + q8) - 2) / 8 * 100;
+
+    // General Health (GH): recode(Q1) + Q11a + Q11c + reverse(Q11b) + reverse(Q11d)
+    let q1 = getRadioValue('sf_1') || 0;
+    let q1Recode = {5:5.0, 4:4.4, 3:3.4, 2:2.0, 1:1.0}[q1] || 0;
+    let q11a = getRadioValue('sf11_1') || 0;
+    let q11b = getRadioValue('sf11_2') || 0;
+    let q11c = getRadioValue('sf11_3') || 0;
+    let q11d = getRadioValue('sf11_4') || 0;
+    let gh = ((q1Recode + q11a + q11c + (6 - q11b) + (6 - q11d)) - 5) / 20 * 100;
+
+    // Vitality (VT): Q9a + Q9e + reverse(Q9g) + reverse(Q9i)
+    let sf9a = getRadioValue('sf9_1') || 0;
+    let sf9e = getRadioValue('sf9_5') || 0;
+    let sf9g = getRadioValue('sf9_7') || 0;
+    let sf9i = getRadioValue('sf9_9') || 0;
+    let vt = ((sf9a + sf9e + (7 - sf9g) + (7 - sf9i)) - 4) / 20 * 100;
+
+    // Social Functioning (SF): Q6 + Q10
+    let q6 = getRadioValue('sf_6') || 0;
+    let q10 = getRadioValue('sf_10') || 0;
+    let sf = ((q6 + q10) - 2) / 8 * 100;
+
+    // Role Emotional (RE): Q5a-5c
+    let reSum = 0;
+    for (let i = 1; i <= 3; i++) { reSum += getRadioValue(`sf5_${i}`) || 0; }
+    let re = ((reSum - 3) / 3) * 100;
+
+    // Mental Health (MH): Q9d + Q9h + reverse(Q9b) + reverse(Q9c) + reverse(Q9f)
+    let sf9d = getRadioValue('sf9_4') || 0;
+    let sf9h = getRadioValue('sf9_8') || 0;
+    let sf9b = getRadioValue('sf9_2') || 0;
+    let sf9c = getRadioValue('sf9_3') || 0;
+    let sf9f = getRadioValue('sf9_6') || 0;
+    let mh = ((sf9d + sf9h + (7 - sf9b) + (7 - sf9c) + (7 - sf9f)) - 5) / 25 * 100;
+
+    // Reported Health Transition: Q2
+    let q2 = getRadioValue('sf_2') || 0;
+    let rht = {5:'++', 4:'+', 3:'0', 2:'-', 1:'--'}[q2] || '-';
+
+    // Summary scores
+    let phys = (pf + rp + bp + gh + vt) / 5;
+    let ment = (gh + vt + sf + re + mh) / 5;
+    let total = (pf + rp + bp + gh + vt + sf + re + mh) / 8;
+
+    let sfInterp = '', sfClass = '';
+    if (total >= 70) { sfInterp = '양호'; sfClass = 'result-normal'; }
+    else if (total >= 50) { sfInterp = '보통'; sfClass = 'result-mild'; }
+    else if (total >= 30) { sfInterp = '저하'; sfClass = 'result-moderate'; }
+    else { sfInterp = '심각한 저하'; sfClass = 'result-severe'; }
+
+    return {
+        title: '건강관련 삶의 질 (SF-36)',
+        score: total.toFixed(1),
+        max: 100,
+        interp: sfInterp,
+        cls: sfClass,
+        components: `PF:${pf.toFixed(1)} | RP:${rp.toFixed(1)} | BP:${bp.toFixed(1)} | GH:${gh.toFixed(1)} | VT:${vt.toFixed(1)} | SF:${sf.toFixed(1)} | RE:${re.toFixed(1)} | MH:${mh.toFixed(1)}`,
+        extra: `Physical Health:${phys.toFixed(1)} | Mental Health:${ment.toFixed(1)} | Total:${total.toFixed(1)} | Reported Health:${rht}`
+    };
 }
 
 function getScale2Results() {
@@ -1962,12 +2042,11 @@ function calculatePSQI() {
     else if (se >= 65) c4 = 2;
     else c4 = 3;
 
-    // Component 5: Sleep disturbances (Q5b-Q5i + Q5j)
+    // Component 5: Sleep disturbances (Q5b-Q5j)
     let c5sum = 0;
-    ['b','c','d','e','f','g','h','i'].forEach(c => {
+    ['b','c','d','e','f','g','h','i','j'].forEach(c => {
         c5sum += getRadioValue(`psqi5_${c}`) || 0;
     });
-    c5sum += getRadioValue('psqi5_j') || 0;
     let c5 = 0;
     if (c5sum === 0) c5 = 0;
     else if (c5sum <= 9) c5 = 1;

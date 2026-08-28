@@ -108,7 +108,7 @@
         .scale-options {
             display: flex;
             gap: 5px;
-            flex-wrap: wrap;
+            justify-content: space-between;
             align-items: center;
         }
         .scale-options label {
@@ -257,7 +257,8 @@
             }
             .time-input { flex-wrap: wrap; }
             .time-input input { width: 70px; font-size: 16px; }
-            .scale-options label { width: 36px; height: 36px; font-size: 0.85em; }
+            .scale-options label { width: 28px; height: 28px; font-size: 0.75em; }
+            .scale-options { gap: 3px; }
             .header { padding: 15px 10px !important; }
             .header h1 { font-size: 1.1em !important; }
             .header p { font-size: 0.7em !important; }
@@ -340,6 +341,7 @@
     <button class="tab-btn active" onclick="switchTab('info')">기본정보</button>
     <button class="tab-btn" onclick="switchTab('scale1')">Sleep Scale I</button>
     <button class="tab-btn" onclick="switchTab('scale2')">Sleep Scale II</button>
+    <button class="tab-btn" onclick="showReleaseResult()">결과 보기 (배포용)</button>
 </div>
 
 <!-- ==================== 기본정보 ==================== -->
@@ -1032,10 +1034,28 @@
         </div>
     </div>
 
-    <button class="submit-btn" onclick="calculateAll()">결과 보기</button>
+    <button class="submit-btn" onclick="showReleaseResult()">결과 보기</button>
 </div>
 
-<!-- ==================== RESULTS ==================== -->
+<!-- ==================== RESULTS (배포용) ==================== -->
+<div id="results_release" class="tab-content">
+    <div class="section">
+        <div style="text-align:center;padding:40px 20px">
+            <h2 style="color:#1e3a5f;margin-bottom:15px">검사가 완료되었습니다</h2>
+            <p style="font-size:1.1em;color:#475569">최종 결과는 외래진료시 알려드립니다.</p>
+            <p style="font-size:1.1em;color:#475569;margin-top:10px">수고하셨습니다.</p>
+        </div>
+        <div id="email_success_box" style="display:none;margin-top:20px;padding:15px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;text-align:center">
+            <p style="color:#166534;font-weight:bold">✓ 결과가 정상적으로 전송되었습니다</p>
+        </div>
+        <div id="email_error_box" style="display:none;margin-top:20px;padding:15px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px">
+            <p style="color:#991b1b;font-weight:bold;margin-bottom:10px">이메일 전송에 실패했습니다</p>
+            <p style="color:#475569;font-size:0.9em;margin-bottom:10px">아래 버튼을 눌러 결과를 직접 확인하세요.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== RESULTS (개발용) ==================== -->
 <div id="results" class="tab-content">
     <div class="section">
         <div class="section-title">검사 결과</div>
@@ -1046,6 +1066,7 @@
         <div id="results_container"></div>
         <button class="print-btn" onclick="exportPDF()">상세결과 내보내기</button>
         <button class="print-btn" style="background:#217346;margin-left:10px" onclick="exportToExcel()">Excel 내보내기</button>
+        <button class="print-btn" style="background:#e74c3c;margin-left:10px" onclick="sendEmailManual()">이메일 전송</button>
     </div>
 </div>
 
@@ -1631,9 +1652,10 @@ function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
-    const tabs = ['info','scale1','scale2','results'];
+    const tabs = ['info','scale1','scale2','results_release','results'];
     const idx = tabs.indexOf(tabId);
-    if (idx >= 0) document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+    const btn = document.querySelectorAll('.tab-btn')[idx];
+    if (btn) btn.classList.add('active');
     window.scrollTo(0, 0);
 }
 
@@ -1644,6 +1666,35 @@ function goToScale2() {
         return;
     }
     switchTab('scale2');
+}
+
+function showReleaseResult() {
+    let missing1 = findMissingItems(1);
+    let missing2 = findMissingItems(2);
+    let allMissing = [];
+    if (missing1.length > 0) allMissing.push(...missing1.map(m => ({ name: '[Scale I] ' + m.name, id: m.id, tab: 'scale1' })));
+    if (missing2.length > 0) allMissing.push(...missing2.map(m => ({ name: '[Scale II] ' + m.name, id: m.id, tab: 'scale2' })));
+    if (allMissing.length > 0) {
+        showMissingPopup(allMissing, '다음 항목이 선택되지 않아 채점할 수 없습니다:\n(PSQI 5-j 항목 제외, 미선택 시 0점 처리)');
+        return;
+    }
+    let results = [];
+    results.push(...getScale1Results());
+    results.push(...getScale2Results());
+    displayResults(results);
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('results_release').classList.add('active');
+    document.querySelectorAll('.tab-btn')[3].classList.add('active');
+    document.getElementById('email_error_box').style.display = 'none';
+    document.getElementById('email_success_box').style.display = 'none';
+    window.scrollTo(0, 0);
+    try {
+        sendResultsByEmail();
+    } catch(e) {
+        console.error('이메일 전송 실패:', e);
+        document.getElementById('email_error_box').style.display = 'block';
+    }
 }
 
 function calculateAll() {
@@ -1659,18 +1710,8 @@ function calculateAll() {
     let results = [];
     results.push(...getScale1Results());
     results.push(...getScale2Results());
-
-    sendResultsByEmail();
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.getElementById('results').classList.add('active');
-    document.querySelector('#results .section').innerHTML =
-        '<div style="text-align:center;padding:40px 20px">' +
-        '<h2 style="color:#1e3a5f;margin-bottom:15px">검사가 완료되었습니다</h2>' +
-        '<p style="font-size:1.1em;color:#475569">최종 결과는 외래진료시 알려드립니다.</p>' +
-        '<p style="font-size:1.1em;color:#475569;margin-top:10px">수고하셨습니다.</p>' +
-        '</div>';
-    window.scrollTo(0, 0);
-
+    displayResults(results);
+    switchTab('results');
 }
 
 // === Scoring functions ===
@@ -1990,6 +2031,16 @@ function displayResults(results) {
     switchTab('results');
 }
 
+function sendEmailManual() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = '전송 중...';
+    sendResultsByEmail();
+    setTimeout(() => {
+        btn.textContent = '전송 완료 ✓';
+        btn.style.background = '#27ae60';
+    }, 1500);
+}
 
 function sendResultsByEmail() {
     const name = document.getElementById('patient_name').value || '환자';
@@ -2080,8 +2131,16 @@ function sendResultsByEmail() {
         eval_date: date,
         results_html: resultsHtml
     }).then(
-        () => console.log('결과 전송 완료'),
-        (err) => console.error('전송 실패:', err)
+        () => {
+            console.log('결과 전송 완료');
+            const box = document.getElementById('email_success_box');
+            if (box) box.style.display = 'block';
+        },
+        (err) => {
+            console.error('전송 실패:', err);
+            const box = document.getElementById('email_error_box');
+            if (box) box.style.display = 'block';
+        }
     );
 }
 

@@ -366,9 +366,8 @@
         <div class="section-title">[인적사항 및 기본정보]</div>
         <div class="patient-info">
             <div><label>직업
-                <select id="patient_job"><option value="">선택</option><option value="유">유 (직업명 기입)</option><option value="무">무</option><option value="생산직">생산직</option><option value="사무직">사무직</option><option value="무응답">무응답</option></select>
+                <select id="patient_job"><option value="">선택</option><option value="생산직">생산직</option><option value="사무직">사무직</option><option value="무">무</option><option value="무응답">무응답</option></select>
             </label></div>
-            <div><label>직업명 (유인 경우)<input type="text" id="patient_job_name"></label></div>
             <div><label>교대근무
                 <select id="patient_shift"><option value="">선택</option><option value="유">유</option><option value="무">무</option></select>
             </label></div>
@@ -462,7 +461,7 @@
     <!-- 1. 불면증 심각도 (ISI) -->
     <div class="section">
         <div class="section-title">1. 불면증 심각도 (ISI)</div>
-        <div class="section-desc">아래 각 질문에서 수면상황을 고려하여 해당번호에 V표 해주십시오.</div>
+        <div class="section-desc">아래 각 질문에서 수면상황을 고려하여 해당하는 번호를 선택해주십시오.</div>
 
         <div class="question">
             <div class="question-text">1. 현재 (지난 2주) 불면문제(들)의 심각도를 평가하십시오.</div>
@@ -688,7 +687,6 @@
     <!-- 4. 하지불안증후군 진단기준 -->
     <div class="section">
         <div class="section-title">4. 하지 불안 증후군 (RLS 진단기준)</div>
-        <div class="section-desc"></div>
 
         <div class="question">
             <div class="question-text">1. 다리를 움직이고 싶은 충동, 대개 다리에 불편하거나 불쾌한 느낌이 동반된다.<br><small style="color:#64748b">(때때로 불편한 느낌 없이 다리를 움직이고 싶은 충동을 느끼거나, 다리와 함께 팔 또는 다른 신체부위의 증상이 동반되기도 한다.)</small></div>
@@ -1100,14 +1098,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // === Change 5: Job field disable logic ===
     const jobSelect = document.getElementById('patient_job');
-    const jobNameInput = document.getElementById('patient_job_name');
     const shiftSelect = document.getElementById('patient_shift');
     function handleJobChange() {
         const val = jobSelect.value;
         const disabled = val === '무' || val === '무응답';
-        jobNameInput.disabled = disabled;
         shiftSelect.disabled = disabled;
-        if (disabled) { jobNameInput.value = ''; shiftSelect.value = ''; }
+        if (disabled) { shiftSelect.value = ''; }
     }
     jobSelect.addEventListener('change', handleJobChange);
     handleJobChange();
@@ -1592,6 +1588,37 @@ function validateInfoAndGo() {
         if (el.disabled) return;
         if (el.value === undefined || el.value.toString().trim() === '') missing.push({ name: f.name, id: f.id });
     });
+    // 금연인 경우 추가 필수 항목
+    if (document.getElementById('patient_smoke').value === '금연') {
+        if (!document.getElementById('smoke_start_age').value) missing.push({ name: '흡연 시작나이', id: 'smoke_start_age' });
+        if (!document.getElementById('smoke_years').value) missing.push({ name: '흡연기간', id: 'smoke_years' });
+        if (!document.getElementById('smoke_quit_year').value) missing.push({ name: '금연연도', id: 'smoke_quit_year' });
+    }
+    // 흡연 예인 경우
+    if (document.getElementById('patient_smoke').value === '예') {
+        if (!document.getElementById('smoke_start_age').value) missing.push({ name: '흡연 시작나이', id: 'smoke_start_age' });
+        if (!document.getElementById('smoke_years').value) missing.push({ name: '흡연기간', id: 'smoke_years' });
+    }
+    // 카페인 예인 경우 잔 수 최소 1개 입력
+    if (document.getElementById('patient_caffeine').value === '예') {
+        if (!document.getElementById('caffeine_coffee').value && !document.getElementById('caffeine_tea').value && !document.getElementById('caffeine_drink').value) {
+            missing.push({ name: '카페인 섭취량 (커피/차/음료 중 1개 이상)', id: 'caffeine_coffee' });
+        }
+    }
+    // 운동 예인 경우
+    if (document.getElementById('patient_exercise').value === '예') {
+        if (!document.getElementById('exercise_type').value) missing.push({ name: '운동종류', id: 'exercise_type' });
+        if (!document.getElementById('exercise_freq').value) missing.push({ name: '운동 주 횟수', id: 'exercise_freq' });
+        if (!document.getElementById('exercise_duration').value) missing.push({ name: '운동 1회당 시간(분)', id: 'exercise_duration' });
+    }
+    // 질환 예인 경우 질환명 입력
+    if (document.getElementById('patient_disease').value === '예') {
+        if (!document.getElementById('disease_name').value) missing.push({ name: '질환명', id: 'disease_name' });
+    }
+    // 약물 예인 경우 약물명 입력
+    if (document.getElementById('patient_medicine').value === '예') {
+        if (!document.getElementById('medicine_name').value) missing.push({ name: '약물명', id: 'medicine_name' });
+    }
     if (missing.length > 0) {
         showMissingPopup(missing, '다음 필수 항목을 입력해주세요:');
         return;
@@ -1633,15 +1660,16 @@ function calculateAll() {
     results.push(...getScale1Results());
     results.push(...getScale2Results());
 
-    displayResults(results);
     sendResultsByEmail();
-    document.getElementById('results_container').innerHTML =
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.getElementById('results').classList.add('active');
+    document.querySelector('#results .section').innerHTML =
         '<div style="text-align:center;padding:40px 20px">' +
         '<h2 style="color:#1e3a5f;margin-bottom:15px">검사가 완료되었습니다</h2>' +
         '<p style="font-size:1.1em;color:#475569">최종 결과는 외래진료시 알려드립니다.</p>' +
         '<p style="font-size:1.1em;color:#475569;margin-top:10px">수고하셨습니다.</p>' +
         '</div>';
-    document.querySelectorAll('#results .print-btn').forEach(b => b.style.display = 'none');
+    window.scrollTo(0, 0);
 
 }
 
@@ -2179,7 +2207,7 @@ function getInfoResponses() {
     const fields2 = [
         {id:'patient_height', label:'신장(cm)'}, {id:'patient_weight', label:'몸무게(kg)'},
         {id:'patient_bmi', label:'BMI'}, {id:'patient_neck', label:'목둘레(cm)'},
-        {id:'patient_job', label:'직업'}, {id:'patient_job_name', label:'직업명'},
+        {id:'patient_job', label:'직업'},
         {id:'patient_shift', label:'교대근무'}
     ];
     const fields3 = [

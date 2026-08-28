@@ -2322,36 +2322,49 @@ function getScaleResponses(tabId) {
         questions.forEach(q => {
             const text = q.querySelector('.question-text');
             if (!text) return;
-            const checked = q.querySelector('input[type="radio"]:checked');
-            const timeInput = q.querySelector('.time-input');
-            const textInput = q.querySelector('input[type="text"], input[type="number"]');
-            let answer = '미응답';
-            if (checked) {
-                const label = checked.closest('label');
-                const labelText = label ? label.textContent.trim() : '';
-                const val = checked.value;
-                if (labelText && labelText !== val) {
-                    answer = `${val}. ${labelText}`;
-                } else {
-                    answer = val;
+            const subQuestions = q.querySelectorAll('.sub-question');
+            if (subQuestions.length > 0) {
+                subQuestions.forEach(sq => {
+                    const sqText = sq.querySelector('.sub-question-text');
+                    if (!sqText) return;
+                    const checked = sq.querySelector('input[type="radio"]:checked');
+                    let answer = '미응답';
+                    if (checked) {
+                        const label = checked.closest('label');
+                        const labelText = label ? label.textContent.trim() : '';
+                        const val = checked.value;
+                        answer = (labelText && labelText !== val) ? `${val}. ${labelText}` : val;
+                    }
+                    items.push({ q: sqText.textContent.substring(0, 40), a: answer });
+                });
+            } else {
+                const checked = q.querySelector('input[type="radio"]:checked');
+                const timeInput = q.querySelector('.time-input');
+                const textInput = q.querySelector('input[type="text"], input[type="number"]');
+                let answer = '미응답';
+                if (checked) {
+                    const label = checked.closest('label');
+                    const labelText = label ? label.textContent.trim() : '';
+                    const val = checked.value;
+                    answer = (labelText && labelText !== val) ? `${val}. ${labelText}` : val;
+                } else if (timeInput) {
+                    const nums = timeInput.querySelectorAll('input[type="number"]');
+                    const selects = timeInput.querySelectorAll('select');
+                    let parts = [];
+                    if (selects.length > 0) parts.push(selects[0].options[selects[0].selectedIndex].text);
+                    if (nums.length >= 2) {
+                        const h = nums[0].value || '0';
+                        const m = nums[1].value || '0';
+                        parts.push(h + '시간 ' + m + '분');
+                    } else if (nums.length === 1 && nums[0].value) {
+                        parts.push(nums[0].value);
+                    }
+                    answer = parts.length > 0 ? parts.join(' ') : '미응답';
+                } else if (textInput && textInput.value) {
+                    answer = textInput.value;
                 }
-            } else if (timeInput) {
-                const nums = timeInput.querySelectorAll('input[type="number"]');
-                const selects = timeInput.querySelectorAll('select');
-                let parts = [];
-                if (selects.length > 0) parts.push(selects[0].options[selects[0].selectedIndex].text);
-                if (nums.length >= 2) {
-                    const h = nums[0].value || '0';
-                    const m = nums[1].value || '0';
-                    parts.push(h + '시간 ' + m + '분');
-                } else if (nums.length === 1 && nums[0].value) {
-                    parts.push(nums[0].value);
-                }
-                answer = parts.length > 0 ? parts.join(' ') : '미응답';
-            } else if (textInput && textInput.value) {
-                answer = textInput.value;
+                items.push({ q: text.textContent.substring(0, 40), a: answer });
             }
-            items.push({ q: text.textContent.substring(0, 40), a: answer });
         });
         if (items.length > 0) {
             html += '<table style="width:100%;table-layout:fixed;border-collapse:collapse;font-size:0.85em;margin-top:4px">';

@@ -453,7 +453,6 @@
     </div>
 
     <button class="submit-btn" onclick="validateInfoAndGo()">검사 시작하기 →</button>
-    <button class="submit-btn" style="background:linear-gradient(135deg,#6b7280,#9ca3af);margin-top:10px;font-size:0.9em" onclick="fillTestData()">🧪 Tester Mode (랜덤 데이터 입력)</button>
 </div>
 
 <!-- ==================== SCALE I ==================== -->
@@ -1047,7 +1046,6 @@
         <div id="results_container"></div>
         <button class="print-btn" onclick="exportPDF()">상세결과 내보내기</button>
         <button class="print-btn" style="background:#217346;margin-left:10px" onclick="exportToExcel()">Excel 내보내기</button>
-        <button class="print-btn" style="background:#e74c3c;margin-left:10px" onclick="sendEmailManual()">이메일 전송</button>
     </div>
 </div>
 
@@ -1992,16 +1990,6 @@ function displayResults(results) {
     switchTab('results');
 }
 
-function sendEmailManual() {
-    const btn = event.target;
-    btn.disabled = true;
-    btn.textContent = '전송 중...';
-    sendResultsByEmail();
-    setTimeout(() => {
-        btn.textContent = '전송 완료 ✓';
-        btn.style.background = '#27ae60';
-    }, 1500);
-}
 
 function sendResultsByEmail() {
     const name = document.getElementById('patient_name').value || '환자';
@@ -2402,109 +2390,6 @@ function exportToExcel() {
     }
 }
 
-function fillTestData() {
-    if (!confirm('모든 문항에 랜덤 데이터를 입력합니다. 기존 응답이 덮어씌워집니다. 계속하시겠습니까?')) return;
-
-    // 인적사항
-    document.getElementById('patient_id').value = 'TEST-' + Math.floor(Math.random()*9000+1000);
-    document.getElementById('patient_name').value = '테스트환자';
-    const today = new Date();
-    document.getElementById('eval_date').value = today.toISOString().slice(0,10);
-    document.getElementById('patient_birth').value = `${1950 + Math.floor(Math.random()*50)}-${String(Math.floor(Math.random()*12)+1).padStart(2,'0')}-${String(Math.floor(Math.random()*28)+1).padStart(2,'0')}`;
-    document.getElementById('patient_birth').dispatchEvent(new Event('input'));
-    document.getElementById('patient_gender').value = Math.random() > 0.5 ? '남' : '여';
-    document.getElementById('patient_gender').dispatchEvent(new Event('change'));
-    document.getElementById('patient_diagnosis').value = ['불면증','수면무호흡','하지불안','기면증','RBD'][Math.floor(Math.random()*5)];
-
-    // 직업/학력/결혼/수입
-    const jobOpts = ['유','무','생산직','사무직','무응답'];
-    document.getElementById('patient_job').value = jobOpts[Math.floor(Math.random()*jobOpts.length)];
-    document.getElementById('patient_job').dispatchEvent(new Event('change'));
-    if (!document.getElementById('patient_shift').disabled) {
-        document.getElementById('patient_shift').value = Math.random() > 0.7 ? '유' : '무';
-    }
-    const eduOpts = ['초졸미만','초졸','중졸','고졸','대졸','대학원이상','무응답'];
-    document.getElementById('patient_edu').value = eduOpts[Math.floor(Math.random()*eduOpts.length)];
-    const marOpts = ['미혼','기혼','이혼','사별','무응답'];
-    document.getElementById('patient_marriage').value = marOpts[Math.floor(Math.random()*marOpts.length)];
-    const incOpts = ['2천만원 미만','2천-3천만원','3천-5천만원','5천-7천만원','7천만원이상','무응답'];
-    document.getElementById('patient_income').value = incOpts[Math.floor(Math.random()*incOpts.length)];
-
-    // 신체계측
-    document.getElementById('patient_height').value = Math.floor(Math.random()*30 + 155);
-    document.getElementById('patient_weight').value = Math.floor(Math.random()*40 + 50);
-    document.getElementById('patient_height').dispatchEvent(new Event('input'));
-    document.getElementById('patient_neck').value = Math.floor(Math.random()*10 + 35);
-    document.getElementById('patient_neck').dispatchEvent(new Event('input'));
-    document.getElementById('patient_waist').value = Math.floor(Math.random()*30 + 70);
-
-    // 생활습관
-    document.getElementById('patient_caffeine').value = Math.random() > 0.3 ? '예' : '아니오';
-    document.getElementById('patient_caffeine').dispatchEvent(new Event('change'));
-    if (document.getElementById('patient_caffeine').value === '예') {
-        document.getElementById('caffeine_coffee').value = Math.floor(Math.random()*4);
-        document.getElementById('caffeine_tea').value = Math.floor(Math.random()*3);
-        document.getElementById('caffeine_drink').value = Math.floor(Math.random()*2);
-    }
-    document.getElementById('patient_alcohol').value = Math.random() > 0.4 ? '예' : '아니오';
-    const smokeOpts = ['예','아니오','금연'];
-    document.getElementById('patient_smoke').value = smokeOpts[Math.floor(Math.random()*smokeOpts.length)];
-    document.getElementById('patient_smoke').dispatchEvent(new Event('change'));
-    if (document.getElementById('patient_smoke').value === '예') {
-        document.getElementById('smoke_start_age').value = Math.floor(Math.random()*10 + 18);
-        document.getElementById('smoke_years').value = Math.floor(Math.random()*20 + 1);
-    }
-    document.getElementById('patient_exercise').value = Math.random() > 0.4 ? '예' : '아니오';
-    document.getElementById('patient_exercise').dispatchEvent(new Event('change'));
-    if (document.getElementById('patient_exercise').value === '예') {
-        document.getElementById('exercise_type').value = ['걷기','수영','헬스','요가'][Math.floor(Math.random()*4)];
-        document.getElementById('exercise_freq').value = Math.floor(Math.random()*5 + 1);
-        document.getElementById('exercise_duration').value = Math.floor(Math.random()*60 + 20);
-    }
-
-    // 병력 및 약물
-    document.getElementById('patient_disease').value = Math.random() > 0.5 ? '예' : '아니오';
-    if (document.getElementById('patient_disease').value === '예') {
-        document.getElementById('disease_name').value = ['고혈압','당뇨','우울증'][Math.floor(Math.random()*3)];
-    }
-    document.getElementById('patient_medicine').value = Math.random() > 0.5 ? '예' : '아니오';
-    if (document.getElementById('patient_medicine').value === '예') {
-        document.getElementById('medicine_name').value = ['졸피뎀','트라조돈','멜라토닌'][Math.floor(Math.random()*3)];
-    }
-    document.getElementById('patient_hospital_count').value = Math.floor(Math.random()*5);
-
-    // 모든 라디오 버튼 그룹에 랜덤 선택
-    const radioGroups = {};
-    document.querySelectorAll('input[type="radio"]:not([disabled])').forEach(r => {
-        if (!radioGroups[r.name]) radioGroups[r.name] = [];
-        radioGroups[r.name].push(r);
-    });
-    Object.values(radioGroups).forEach(group => {
-        const pick = group[Math.floor(Math.random() * group.length)];
-        pick.checked = true;
-        pick.dispatchEvent(new Event('change', {bubbles:true}));
-    });
-
-    // PSQI 시간 입력
-    document.getElementById('psqi_1_hour').value = Math.floor(Math.random()*4 + 9);
-    document.getElementById('psqi_1_min').value = Math.floor(Math.random()*60);
-    document.getElementById('psqi_2_hour').value = Math.floor(Math.random()*2);
-    document.getElementById('psqi_2_min').value = Math.floor(Math.random()*60);
-    document.getElementById('psqi_3_hour').value = Math.floor(Math.random()*4 + 5);
-    document.getElementById('psqi_3_min').value = Math.floor(Math.random()*60);
-    document.getElementById('psqi_4_hour').value = Math.floor(Math.random()*4 + 4);
-    document.getElementById('psqi_4_min').value = Math.floor(Math.random()*60);
-
-    // DBAS 랜덤 (1-10 scale options)
-    for (let i = 1; i <= 16; i++) {
-        const val = Math.floor(Math.random()*10) + 1;
-        const el = document.querySelector(`input[name="dbas_${i}"][value="${val}"]`);
-        if (el) el.checked = true;
-    }
-
-    alert('랜덤 데이터 입력 완료! Scale I → Scale II 순서로 확인 후 결과보기를 눌러주세요.');
-    switchTab('scale1');
-}
 </script>
 </body>
 </html>

@@ -2001,7 +2001,7 @@ function calculatePSQI() {
         total: '-',
         interp: psqiInterp,
         cls: psqiClass,
-        components: `C1(수면질):${c1} | C2(수면잠복기):${c2} | C3(수면시간):${c3} | C4(수면효율):${c4} | C5(수면장애):${c5} | C6(수면약물):${c6} | C7(주간기능장애):${c7}`,
+        components: `C1(수면질):${c1} | C2(수면잠복기):${c2} | C3(수면시간):${c3} | C4(수면효율):${c4} | C5(수면방해):${c5} | C6(수면약물):${c6} | C7(주간기능장애):${c7}`,
         extra: `취침: ${bedAmPm === 'pm' ? '오후' : '오전'} ${bedHour}시 ${bedMin}분 | 입면잠복기: ${latencyMin}분 | 기상: ${wakeAmPm === 'am' ? '오전' : '오후'} ${wakeHour}시 ${wakeMin}분 | 총수면: ${Math.floor(sleepHours)}시간 ${Math.round((sleepHours % 1) * 60)}분 | 수면효율: ${se.toFixed(1)}%`
     };
 }

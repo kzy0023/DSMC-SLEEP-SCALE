@@ -577,28 +577,28 @@
             </div>
         </div>
         <div class="question">
-            <div class="question-text">(B) 체질량지수(BMI:kg/m2)가 30보다 높습니까?</div>
+            <div class="question-text">(B) 체질량지수(BMI:kg/m2)가 30보다 높습니까? <span style="font-size:0.8em;color:#1e40af;background:#eff6ff;padding:2px 6px;border-radius:4px">기본정보에서 자동 반영</span></div>
             <div class="yesno-options">
                 <label><input type="radio" name="stop_b" value="1">예</label>
                 <label><input type="radio" name="stop_b" value="0">아니오</label>
             </div>
         </div>
         <div class="question">
-            <div class="question-text">(A) 나이가 50세보다 많습니까?</div>
+            <div class="question-text">(A) 나이가 50세보다 많습니까? <span style="font-size:0.8em;color:#1e40af;background:#eff6ff;padding:2px 6px;border-radius:4px">기본정보에서 자동 반영</span></div>
             <div class="yesno-options">
                 <label><input type="radio" name="stop_a" value="1">예</label>
                 <label><input type="radio" name="stop_a" value="0">아니오</label>
             </div>
         </div>
         <div class="question">
-            <div class="question-text">(N) 목둘레가 큽니까? (목젖주위로 측정 : 남성>43cm, 여성>41cm)</div>
+            <div class="question-text">(N) 목둘레가 큽니까? (목젖주위로 측정 : 남성>43cm, 여성>41cm) <span style="font-size:0.8em;color:#1e40af;background:#eff6ff;padding:2px 6px;border-radius:4px">기본정보에서 자동 반영</span></div>
             <div class="yesno-options">
                 <label><input type="radio" name="stop_n" value="1">예</label>
                 <label><input type="radio" name="stop_n" value="0">아니오</label>
             </div>
         </div>
         <div class="question">
-            <div class="question-text">(G) 성별이 남성입니까?</div>
+            <div class="question-text">(G) 성별이 남성입니까? <span style="font-size:0.8em;color:#1e40af;background:#eff6ff;padding:2px 6px;border-radius:4px">기본정보에서 자동 반영</span></div>
             <div class="yesno-options">
                 <label><input type="radio" name="stop_g" value="1">예</label>
                 <label><input type="radio" name="stop_g" value="0">아니오</label>
@@ -1960,37 +1960,6 @@ function sendResultsByEmail() {
         return s.includes(',') || s.includes('"') ? '"'+s.replace(/"/g,'""')+'"' : s;
     }).join(',');
     const csvContent = '﻿' + headers.join(',') + '\n' + csvRow;
-    const csvBase64 = btoa(unescape(encodeURIComponent(csvContent)));
-
-    const infoBox = document.querySelector('#results .info-box');
-    const pdfHtml = `<html><head><meta charset="UTF-8"><style>
-        body{font-family:sans-serif;font-size:11px;padding:15px}
-        .result-box{border:1px solid #ddd;padding:8px;margin:5px 0;border-radius:6px}
-        .result-title{font-weight:bold;color:#1e3a5f}
-        .result-normal{background:#dcfce7;color:#166534;padding:3px 8px;border-radius:4px;display:inline-block}
-        .result-mild{background:#fef9c3;color:#854d0e;padding:3px 8px;border-radius:4px;display:inline-block}
-        .result-moderate{background:#fed7aa;color:#9a3412;padding:3px 8px;border-radius:4px;display:inline-block}
-        .result-severe{background:#fecaca;color:#991b1b;padding:3px 8px;border-radius:4px;display:inline-block}
-        table{border-collapse:collapse;width:100%;font-size:10px}
-        th,td{border:1px solid #ddd;padding:3px 5px}
-        th{background:#1e3a5f;color:white}
-        h2{color:#1e3a5f;text-align:center}
-        h3{color:#1e3a5f;border-left:3px solid #1e3a5f;padding-left:8px;margin:10px 0 5px}
-    </style></head><body>
-        <h2>DSMC SLEEP SCALE 상세결과</h2>
-        <p style="text-align:center;color:#666">계명대학교 동산병원 신경과 수면센터</p>
-        <hr>
-        ${infoBox ? infoBox.innerHTML : ''}
-        <h3>검사 결과</h3>
-        ${document.getElementById('results_container').innerHTML}
-        <h3>기본정보</h3>
-        ${getInfoResponses()}
-        <h3>Scale I 응답</h3>
-        ${getScaleResponses('scale1')}
-        <h3>Scale II 응답</h3>
-        ${getScaleResponses('scale2')}
-    </body></html>`;
-    const pdfBase64 = btoa(unescape(encodeURIComponent(pdfHtml)));
 
     function interpStyle(cls) {
         const styles = {
@@ -2002,19 +1971,13 @@ function sendResultsByEmail() {
         return styles[cls] || 'background:#f1f5f9;color:#334155';
     }
 
-    let resultsHtml = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">';
-    resultsHtml += '<h2 style="color:#1e3a5f;text-align:center;margin-bottom:5px">DSMC SLEEP SCALE 검사결과</h2>';
+    let resultsHtml = '<div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto">';
+    resultsHtml += '<h2 style="color:#1e3a5f;text-align:center;margin-bottom:5px">DSMC SLEEP SCALE 상세결과</h2>';
     resultsHtml += '<p style="text-align:center;color:#666;margin-top:0">계명대학교 동산병원 신경과 수면센터</p>';
-    resultsHtml += '<table style="border-collapse:collapse;width:100%;margin-bottom:15px;font-size:13px"><tr>';
-    resultsHtml += `<td style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;font-weight:bold">성명</td>`;
-    resultsHtml += `<td style="border:1px solid #ddd;padding:6px">${name}</td>`;
-    resultsHtml += `<td style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;font-weight:bold">등록번호</td>`;
-    resultsHtml += `<td style="border:1px solid #ddd;padding:6px">${id}</td>`;
-    resultsHtml += `<td style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;font-weight:bold">검사일</td>`;
-    resultsHtml += `<td style="border:1px solid #ddd;padding:6px">${date}</td>`;
-    resultsHtml += '</tr></table>';
+    resultsHtml += '<hr style="border:none;border-top:2px solid #1e3a5f;margin:10px 0">';
 
-    resultsHtml += '<h3 style="color:#1e3a5f;border-left:4px solid #1e3a5f;padding-left:8px;margin:15px 0 8px">Scale I</h3>';
+    // 검사 결과 요약
+    resultsHtml += '<h3 style="color:#1e3a5f;border-left:4px solid #1e3a5f;padding-left:8px;margin:15px 0 8px">검사 결과 요약</h3>';
     resultsHtml += '<table style="border-collapse:collapse;width:100%;font-size:13px">';
     resultsHtml += '<tr><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:left">검사</th><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:center">점수</th><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:left">해석</th></tr>';
     scale1.forEach(r => {
@@ -2023,11 +1986,6 @@ function sendResultsByEmail() {
         resultsHtml += `<td style="border:1px solid #ddd;padding:6px"><span style="padding:2px 8px;border-radius:4px;${interpStyle(r.cls)}">${r.interp}</span></td></tr>`;
         if (r.extra) resultsHtml += `<tr><td colspan="3" style="border:1px solid #ddd;padding:4px 6px;font-size:12px;color:#475569;background:#f8fafc">${r.extra}</td></tr>`;
     });
-    resultsHtml += '</table>';
-
-    resultsHtml += '<h3 style="color:#1e3a5f;border-left:4px solid #1e3a5f;padding-left:8px;margin:15px 0 8px">Scale II</h3>';
-    resultsHtml += '<table style="border-collapse:collapse;width:100%;font-size:13px">';
-    resultsHtml += '<tr><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:left">검사</th><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:center">점수</th><th style="border:1px solid #ddd;padding:6px;background:#1e3a5f;color:white;text-align:left">해석</th></tr>';
     scale2.forEach(r => {
         resultsHtml += `<tr><td style="border:1px solid #ddd;padding:6px;font-weight:bold">${r.title}</td>`;
         resultsHtml += `<td style="border:1px solid #ddd;padding:6px;text-align:center;font-weight:bold;color:#1e3a5f">${r.score}/${r.max}</td>`;
@@ -2036,6 +1994,19 @@ function sendResultsByEmail() {
         if (r.extra) resultsHtml += `<tr><td colspan="3" style="border:1px solid #ddd;padding:4px 6px;font-size:12px;color:#475569;background:#f8fafc">${r.extra}</td></tr>`;
     });
     resultsHtml += '</table>';
+
+    // 기본정보 응답
+    resultsHtml += '<h3 style="color:#1e3a5f;border-left:4px solid #1e3a5f;padding-left:8px;margin:15px 0 8px">기본정보 응답</h3>';
+    resultsHtml += getInfoResponses();
+
+    // Scale I 응답
+    resultsHtml += '<h3 style="color:#1e3a5f;border-left:4px solid #1e3a5f;padding-left:8px;margin:15px 0 8px">Scale I 응답</h3>';
+    resultsHtml += getScaleResponses('scale1');
+
+    // Scale II 응답
+    resultsHtml += '<h3 style="color:#1e3a5f;border-left:4px solid #1e3a5f;padding-left:8px;margin:15px 0 8px">Scale II 응답</h3>';
+    resultsHtml += getScaleResponses('scale2');
+
     resultsHtml += '<hr style="margin-top:20px;border:none;border-top:1px solid #ddd">';
     resultsHtml += '<p style="font-size:11px;color:#999;text-align:center">본 메일은 자동 발송되었습니다.</p>';
     resultsHtml += '</div>';
@@ -2046,8 +2017,7 @@ function sendResultsByEmail() {
         patient_name: name,
         patient_id: id,
         eval_date: date,
-        results_html: resultsHtml,
-        csv_data: csvContent
+        results_html: resultsHtml
     }).then(
         () => console.log('결과 전송 완료'),
         (err) => console.error('전송 실패:', err)
@@ -2233,6 +2203,7 @@ function getScaleResponses(tabId) {
             const text = q.querySelector('.question-text');
             if (!text) return;
             const checked = q.querySelector('input[type="radio"]:checked');
+            const timeInput = q.querySelector('.time-input');
             const textInput = q.querySelector('input[type="text"], input[type="number"]');
             let answer = '미응답';
             if (checked) {
@@ -2244,6 +2215,19 @@ function getScaleResponses(tabId) {
                 } else {
                     answer = val;
                 }
+            } else if (timeInput) {
+                const nums = timeInput.querySelectorAll('input[type="number"]');
+                const selects = timeInput.querySelectorAll('select');
+                let parts = [];
+                if (selects.length > 0) parts.push(selects[0].options[selects[0].selectedIndex].text);
+                if (nums.length >= 2) {
+                    const h = nums[0].value || '0';
+                    const m = nums[1].value || '0';
+                    parts.push(h + '시간 ' + m + '분');
+                } else if (nums.length === 1 && nums[0].value) {
+                    parts.push(nums[0].value);
+                }
+                answer = parts.length > 0 ? parts.join(' ') : '미응답';
             } else if (textInput && textInput.value) {
                 answer = textInput.value;
             }

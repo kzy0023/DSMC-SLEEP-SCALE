@@ -688,7 +688,7 @@
     <!-- 4. 하지불안증후군 진단기준 -->
     <div class="section">
         <div class="section-title">4. 하지 불안 증후군 (RLS 진단기준)</div>
-        <div class="section-desc">아래 4가지 필수 진단기준에 모두 해당되면 하지불안증후군으로 진단합니다.</div>
+        <div class="section-desc"></div>
 
         <div class="question">
             <div class="question-text">1. 다리를 움직이고 싶은 충동, 대개 다리에 불편하거나 불쾌한 느낌이 동반된다.<br><small style="color:#64748b">(때때로 불편한 느낌 없이 다리를 움직이고 싶은 충동을 느끼거나, 다리와 함께 팔 또는 다른 신체부위의 증상이 동반되기도 한다.)</small></div>
@@ -1518,6 +1518,47 @@ function generateDBASItems() {
     document.getElementById('dbas_items').innerHTML = html;
 }
 
+// === Missing items popup ===
+function showMissingPopup(items, title) {
+    const existing = document.getElementById('missing-popup');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'missing-popup';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+
+    let listHtml = items.map((item, i) =>
+        `<div style="padding:8px 12px;margin:3px 0;background:#fff;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#fff'" onclick="navigateToMissing('${item.id}','${item.tab || ''}')">• ${item.name}</div>`
+    ).join('');
+
+    overlay.innerHTML = `<div style="background:white;border-radius:12px;padding:20px;max-width:400px;width:100%;max-height:70vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <h3 style="color:#1e3a5f;margin:0 0 5px;font-size:1em">${title}</h3>
+        <p style="color:#64748b;font-size:0.8em;margin:0 0 12px">항목을 클릭하면 해당 위치로 이동합니다.</p>
+        ${listHtml}
+        <button onclick="document.getElementById('missing-popup').remove()" style="width:100%;margin-top:12px;padding:10px;background:#1e3a5f;color:white;border:none;border-radius:6px;font-size:0.9em;cursor:pointer">닫기</button>
+    </div>`;
+
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+}
+
+function navigateToMissing(id, tab) {
+    document.getElementById('missing-popup').remove();
+    if (tab) switchTab(tab);
+    setTimeout(() => {
+        let el = document.getElementById(id);
+        if (!el) el = document.querySelector(`input[name="${id}"]`);
+        if (el) {
+            const question = el.closest('.question') || el.closest('label') || el;
+            question.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            question.style.outline = '3px solid #3b82f6';
+            question.style.outlineOffset = '4px';
+            question.style.borderRadius = '8px';
+            setTimeout(() => { question.style.outline = ''; question.style.outlineOffset = ''; }, 3000);
+        }
+    }, 100);
+}
+
 // === Info validation ===
 function validateInfoAndGo() {
     const required = [
@@ -1549,10 +1590,10 @@ function validateInfoAndGo() {
         const el = document.getElementById(f.id);
         if (!el) return;
         if (el.disabled) return;
-        if (el.value === undefined || el.value.toString().trim() === '') missing.push(f.name);
+        if (el.value === undefined || el.value.toString().trim() === '') missing.push({ name: f.name, id: f.id });
     });
     if (missing.length > 0) {
-        alert('다음 필수 항목을 입력해주세요:\n\n• ' + missing.join('\n• '));
+        showMissingPopup(missing, '다음 필수 항목을 입력해주세요:');
         return;
     }
     switchTab('scale1');
@@ -1570,24 +1611,22 @@ function switchTab(tabId) {
 }
 
 function goToScale2() {
-    // Scale I 미응답 체크
     let missing = findMissingItems(1);
     if (missing.length > 0) {
-        alert(`Scale I에 선택되지 않은 항목이 있습니다.\n\n• ${missing.join('\n• ')}`);
+        showMissingPopup(missing, 'Scale I에 선택되지 않은 항목이 있습니다:');
         return;
     }
     switchTab('scale2');
 }
 
 function calculateAll() {
-    // Scale I + II 미응답 체크
     let missing1 = findMissingItems(1);
     let missing2 = findMissingItems(2);
     let allMissing = [];
-    if (missing1.length > 0) allMissing.push(...missing1.map(m => `[Scale I] ${m}`));
-    if (missing2.length > 0) allMissing.push(...missing2.map(m => `[Scale II] ${m}`));
+    if (missing1.length > 0) allMissing.push(...missing1.map(m => ({ name: '[Scale I] ' + m.name, id: m.id, tab: 'scale1' })));
+    if (missing2.length > 0) allMissing.push(...missing2.map(m => ({ name: '[Scale II] ' + m.name, id: m.id, tab: 'scale2' })));
     if (allMissing.length > 0) {
-        alert(`다음 항목이 선택되지 않아 채점할 수 없습니다.\n(PSQI 5-j 항목 제외, 미선택 시 0점 처리)\n\n• ${allMissing.join('\n• ')}`);
+        showMissingPopup(allMissing, '다음 항목이 선택되지 않아 채점할 수 없습니다:\n(PSQI 5-j 항목 제외, 미선택 시 0점 처리)');
         return;
     }
     let results = [];
@@ -1596,16 +1635,13 @@ function calculateAll() {
 
     displayResults(results);
     sendResultsByEmail();
-    setTimeout(() => {
-        document.getElementById('results_container').innerHTML =
-            '<div style="text-align:center;padding:40px 20px">' +
-            '<h2 style="color:#1e3a5f;margin-bottom:15px">검사가 완료되었습니다</h2>' +
-            '<p style="font-size:1.1em;color:#475569">최종 결과는 외래진료시 알려드립니다.</p>' +
-            '<p style="font-size:1.1em;color:#475569;margin-top:10px">수고하셨습니다.</p>' +
-            '</div>';
-        document.querySelector('#results .print-btn').style.display = 'none';
-        document.querySelector('#results .print-btn:last-of-type').style.display = 'none';
-    }, 100);
+    document.getElementById('results_container').innerHTML =
+        '<div style="text-align:center;padding:40px 20px">' +
+        '<h2 style="color:#1e3a5f;margin-bottom:15px">검사가 완료되었습니다</h2>' +
+        '<p style="font-size:1.1em;color:#475569">최종 결과는 외래진료시 알려드립니다.</p>' +
+        '<p style="font-size:1.1em;color:#475569;margin-top:10px">수고하셨습니다.</p>' +
+        '</div>';
+    document.querySelectorAll('#results .print-btn').forEach(b => b.style.display = 'none');
 
 }
 
@@ -1619,49 +1655,46 @@ function findMissingItems(scale) {
     let missing = [];
     if (scale === 1 || scale === 'all') {
         const isiNames = {isi_1a:'ISI 1-1) 잠들기 어려움', isi_1b:'ISI 1-2) 잠을 유지하기 어려움', isi_1c:'ISI 1-3) 너무 일찍 깨는 문제', isi_2:'ISI 2번', isi_3:'ISI 3번', isi_4:'ISI 4번', isi_5:'ISI 5번'};
-        Object.entries(isiNames).forEach(([name, label]) => { if (!getRadioValue(name) && getRadioValue(name) !== 0) missing.push(label); });
+        Object.entries(isiNames).forEach(([name, label]) => { if (!getRadioValue(name) && getRadioValue(name) !== 0) missing.push({ name: label, id: name }); });
 
-        for (let i = 1; i <= 8; i++) { if (getRadioValue(`ess_${i}`) === null) missing.push(`ESS ${i}번`); }
+        for (let i = 1; i <= 8; i++) { if (getRadioValue(`ess_${i}`) === null) missing.push({ name: `ESS ${i}번`, id: `ess_${i}` }); }
 
-        ['s','t','o','p'].forEach(c => { if (getRadioValue(`stop_${c}`) === null) missing.push(`STOP-Bang (${c.toUpperCase()})`); });
+        ['s','t','o','p'].forEach(c => { if (getRadioValue(`stop_${c}`) === null) missing.push({ name: `STOP-Bang (${c.toUpperCase()})`, id: `stop_${c}` }); });
 
-        for (let i = 1; i <= 4; i++) { if (getRadioValue(`rls_${i}`) === null) missing.push(`RLS ${i}번`); }
+        for (let i = 1; i <= 4; i++) { if (getRadioValue(`rls_${i}`) === null) missing.push({ name: `RLS ${i}번`, id: `rls_${i}` }); }
 
         // SF-36
-        if (getRadioValue('sf_1') === null) missing.push('SF-36 1번');
-        if (getRadioValue('sf_2') === null) missing.push('SF-36 2번');
-        for (let i = 1; i <= 10; i++) { if (getRadioValue(`sf3_${i}`) === null) missing.push(`SF-36 3-${i})`); }
-        for (let i = 1; i <= 4; i++) { if (getRadioValue(`sf4_${i}`) === null) missing.push(`SF-36 4-${i})`); }
-        for (let i = 1; i <= 3; i++) { if (getRadioValue(`sf5_${i}`) === null) missing.push(`SF-36 5-${i})`); }
-        if (getRadioValue('sf_6') === null) missing.push('SF-36 6번');
-        if (getRadioValue('sf_7') === null) missing.push('SF-36 7번');
-        if (getRadioValue('sf_8') === null) missing.push('SF-36 8번');
-        for (let i = 1; i <= 9; i++) { if (getRadioValue(`sf9_${i}`) === null) missing.push(`SF-36 9-${i})`); }
-        if (getRadioValue('sf_10') === null) missing.push('SF-36 10번');
-        for (let i = 1; i <= 4; i++) { if (getRadioValue(`sf11_${i}`) === null) missing.push(`SF-36 11-${i})`); }
+        if (getRadioValue('sf_1') === null) missing.push({ name: 'SF-36 1번', id: 'sf_1' });
+        if (getRadioValue('sf_2') === null) missing.push({ name: 'SF-36 2번', id: 'sf_2' });
+        for (let i = 1; i <= 10; i++) { if (getRadioValue(`sf3_${i}`) === null) missing.push({ name: `SF-36 3-${i})`, id: `sf3_${i}` }); }
+        for (let i = 1; i <= 4; i++) { if (getRadioValue(`sf4_${i}`) === null) missing.push({ name: `SF-36 4-${i})`, id: `sf4_${i}` }); }
+        for (let i = 1; i <= 3; i++) { if (getRadioValue(`sf5_${i}`) === null) missing.push({ name: `SF-36 5-${i})`, id: `sf5_${i}` }); }
+        if (getRadioValue('sf_6') === null) missing.push({ name: 'SF-36 6번', id: 'sf_6' });
+        if (getRadioValue('sf_7') === null) missing.push({ name: 'SF-36 7번', id: 'sf_7' });
+        if (getRadioValue('sf_8') === null) missing.push({ name: 'SF-36 8번', id: 'sf_8' });
+        for (let i = 1; i <= 9; i++) { if (getRadioValue(`sf9_${i}`) === null) missing.push({ name: `SF-36 9-${i})`, id: `sf9_${i}` }); }
+        if (getRadioValue('sf_10') === null) missing.push({ name: 'SF-36 10번', id: 'sf_10' });
+        for (let i = 1; i <= 4; i++) { if (getRadioValue(`sf11_${i}`) === null) missing.push({ name: `SF-36 11-${i})`, id: `sf11_${i}` }); }
     }
     if (scale === 2 || scale === 'all') {
-        // K-IRLS: RLS 4개 모두 '예'인 경우에만 검증
         let rlsAllYes = true;
         for (let i = 1; i <= 4; i++) { if (getRadioValue(`rls_${i}`) !== 1) { rlsAllYes = false; break; } }
         if (rlsAllYes) {
-            for (let i = 1; i <= 10; i++) { if (getRadioValue(`irls_${i}`) === null) missing.push(`K-IRLS ${i}번`); }
+            for (let i = 1; i <= 10; i++) { if (getRadioValue(`irls_${i}`) === null) missing.push({ name: `K-IRLS ${i}번`, id: `irls_${i}` }); }
         }
 
-        // PSQI 시간 입력 검증
-        if (!document.getElementById('psqi_1_hour').value && !document.getElementById('psqi_1_min').value) missing.push('PSQI 1번 (취침시간)');
-        if (!document.getElementById('psqi_2_hour').value && !document.getElementById('psqi_2_min').value) missing.push('PSQI 2번 (입면잠복기)');
-        if (!document.getElementById('psqi_3_hour').value && !document.getElementById('psqi_3_min').value) missing.push('PSQI 3번 (기상시간)');
-        if (!document.getElementById('psqi_4_hour').value && !document.getElementById('psqi_4_min').value) missing.push('PSQI 4번 (총수면시간)');
+        if (!document.getElementById('psqi_1_hour').value && !document.getElementById('psqi_1_min').value) missing.push({ name: 'PSQI 1번 (취침시간)', id: 'psqi_1_hour' });
+        if (!document.getElementById('psqi_2_hour').value && !document.getElementById('psqi_2_min').value) missing.push({ name: 'PSQI 2번 (입면잠복기)', id: 'psqi_2_hour' });
+        if (!document.getElementById('psqi_3_hour').value && !document.getElementById('psqi_3_min').value) missing.push({ name: 'PSQI 3번 (기상시간)', id: 'psqi_3_hour' });
+        if (!document.getElementById('psqi_4_hour').value && !document.getElementById('psqi_4_min').value) missing.push({ name: 'PSQI 4번 (총수면시간)', id: 'psqi_4_hour' });
 
-        // PSQI (j 제외)
-        ['a','b','c','d','e','f','g','h','i'].forEach(c => { if (getRadioValue(`psqi5_${c}`) === null) missing.push(`PSQI 5-${c})`); });
-        if (getRadioValue('psqi_6') === null) missing.push('PSQI 6번');
-        if (getRadioValue('psqi_7') === null) missing.push('PSQI 7번');
-        if (getRadioValue('psqi_8') === null) missing.push('PSQI 8번');
-        if (getRadioValue('psqi_9') === null) missing.push('PSQI 9번');
+        ['a','b','c','d','e','f','g','h','i'].forEach(c => { if (getRadioValue(`psqi5_${c}`) === null) missing.push({ name: `PSQI 5-${c})`, id: `psqi5_${c}` }); });
+        if (getRadioValue('psqi_6') === null) missing.push({ name: 'PSQI 6번', id: 'psqi_6' });
+        if (getRadioValue('psqi_7') === null) missing.push({ name: 'PSQI 7번', id: 'psqi_7' });
+        if (getRadioValue('psqi_8') === null) missing.push({ name: 'PSQI 8번', id: 'psqi_8' });
+        if (getRadioValue('psqi_9') === null) missing.push({ name: 'PSQI 9번', id: 'psqi_9' });
 
-        for (let i = 1; i <= 16; i++) { if (getRadioValue(`dbas_${i}`) === null) missing.push(`DBAS ${i}번`); }
+        for (let i = 1; i <= 16; i++) { if (getRadioValue(`dbas_${i}`) === null) missing.push({ name: `DBAS ${i}번`, id: `dbas_${i}` }); }
     }
     return missing;
 }

@@ -1926,12 +1926,12 @@ function calculateSF36() {
 
     return {
         title: '건강관련 삶의 질 (SF-36)',
-        score: total.toFixed(1),
+        score: Math.round(total),
         max: 100,
         interp: sfInterp,
         cls: sfClass,
-        components: `PF:${pf.toFixed(1)} | RP:${rp.toFixed(1)} | BP:${bp.toFixed(1)} | GH:${gh.toFixed(1)} | VT:${vt.toFixed(1)} | SF:${sf.toFixed(1)} | RE:${re.toFixed(1)} | MH:${mh.toFixed(1)}`,
-        extra: `Physical Health:${phys.toFixed(1)} | Mental Health:${ment.toFixed(1)} | Total:${total.toFixed(1)} | Reported Health:${rht}`
+        components: `PF:${Math.round(pf)} | RP:${Math.round(rp)} | BP:${Math.round(bp)} | GH:${Math.round(gh)} | VT:${Math.round(vt)} | SF:${Math.round(sf)} | RE:${Math.round(re)} | MH:${Math.round(mh)}`,
+        extra: `Physical Health:${Math.round(phys)} | Mental Health:${Math.round(ment)} | Total:${Math.round(total)} | Reported Health:${rht}`
     };
 }
 
@@ -2068,9 +2068,8 @@ function calculatePSQI() {
 
     let globalPSQI = c1 + c2 + c3 + c4 + c5 + c6 + c7;
     let psqiInterp = '', psqiClass = '';
-    if (globalPSQI < 5) { psqiInterp = '좋은 수면의 질 (0-4)'; psqiClass = 'result-normal'; }
-    else if (globalPSQI <= 10) { psqiInterp = '나쁜 수면의 질 (5-10)'; psqiClass = 'result-moderate'; }
-    else { psqiInterp = '매우 나쁜 수면의 질 (11-21)'; psqiClass = 'result-severe'; }
+    if (globalPSQI < 8.5) { psqiInterp = '좋은 수면 (<8.5)'; psqiClass = 'result-normal'; }
+    else { psqiInterp = '나쁜 수면 (≥8.5)'; psqiClass = 'result-severe'; }
 
     return {
         title: '피처버그 수면의 질 (PSQI-K)',
